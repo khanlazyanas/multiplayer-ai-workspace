@@ -3,10 +3,10 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension } from "@liveblocks/react-tiptap";
+import Mention from "@tiptap/extension-mention";
+import suggestion from "./suggestion";
 
 export default function Editor() {
-  // Ye Liveblocks ka official magic hook hai! 
-  // Saari Yjs, Cursors, aur Syncing ki mehnat ye akela karega.
   const liveblocks = useLiveblocksExtension();
 
   const editor = useEditor({
@@ -14,9 +14,15 @@ export default function Editor() {
     extensions: [
       StarterKit.configure({
         // @ts-ignore
-        history: false, // Undo/Redo Liveblocks khud handle karega
+        history: false, 
       }),
-      liveblocks, // Bas ye ek line saara collaboration sambhal legi
+      liveblocks,
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'bg-sky-500/20 text-sky-400 rounded px-1 font-medium',
+        },
+        suggestion,
+      }),
     ],
     editorProps: {
       attributes: {
@@ -25,7 +31,6 @@ export default function Editor() {
     },
   });
 
-  // Jab tak editor load na ho, tab tak loading screen dikhao
   if (!editor) {
     return (
       <div className="flex items-center justify-center min-h-[400px] text-gray-400 font-medium">
