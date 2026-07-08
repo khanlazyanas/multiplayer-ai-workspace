@@ -41,7 +41,6 @@ export default function Editor() {
           let hasAI = false;
           let promptText = "";
 
-          // Naya logic: Editor ke us line mein check karega ki AI Badge hai ya nahi
           $from.parent.forEach((node) => {
             if (node.type.name === 'mention' && node.attrs.id.includes('AI')) {
               hasAI = true;
@@ -50,21 +49,28 @@ export default function Editor() {
             }
           });
 
-          // Agar AI Badge mila, tabhi API call hoga
           if (hasAI) {
             event.preventDefault(); 
-            
-            // Extra @ symbols ko saf karke sirf sawal nikalna
             const finalPrompt = promptText.replace(/@/g, '').trim();
 
             if (finalPrompt) {
               complete(finalPrompt).then((response) => {
+                // DEBUGGER: Agar AI ka answer aaya, toh pop-up aayega
                 if (response) {
-                  const tr = view.state.tr;
-                  tr.insertText(`\n\n🤖 AI: ${response}\n\n`, state.selection.to);
+                  alert("✅ AI Answer Aaya:\n" + response.substring(0, 50) + "..."); 
+                  
+                  // Tiptap State Fix (Latest state uthana zaroori hai async ke baad)
+                  const latestState = view.state; 
+                  const tr = latestState.tr;
+                  tr.insertText(`\n\n🤖 AI:\n${response}\n\n`, latestState.selection.to);
                   view.dispatch(tr);
+                } else {
+                  alert("❌ Vercel ne API Call successful ki, par Response KHALI (Empty) bheja!");
                 }
-              }).catch(err => console.error(err));
+              }).catch(err => {
+                alert("❌ API Call fail ho gayi: " + err.message);
+                console.error(err);
+              });
             }
             return true; 
           }
