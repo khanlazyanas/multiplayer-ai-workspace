@@ -2,7 +2,7 @@
 
 import { CollaborativeRoom } from "@/components/live/CollaborativeRoom";
 import { LiveCursors } from "@/components/live/LiveCursors";
-import { Editor } from "@/components/editor/Editor";
+import Editor from "@/components/editor/Editor"; 
 import { useMyPresence } from "@liveblocks/react/suspense";
 
 function WorkspaceCanvas() {
@@ -20,7 +20,7 @@ function WorkspaceCanvas() {
     >
       <LiveCursors />
       
-      <div className="text-center z-10 mb-6">
+      <div className="text-center z-10 mb-6 pointer-events-none">
         <h1 className="text-4xl font-extrabold text-sky-400 mb-2">
           Multiplayer AI Workspace
         </h1>
@@ -29,7 +29,6 @@ function WorkspaceCanvas() {
         </p>
       </div>
 
-      {/* Humara Naya Real-time Editor */}
       <div className="z-10 w-full px-4">
         <Editor />
       </div>
