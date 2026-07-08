@@ -1,26 +1,31 @@
 import { google } from '@ai-sdk/google';
 import { streamText } from 'ai';
 
-// Next.js ko allow karo ki API response stream kar sake (max 30 seconds)
+// Vercel ko bata rahe hain ki ise live streaming (Edge) par chalana hai
+export const dynamic = 'force-dynamic';
+export const runtime = 'edge'; 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    // Editor se aane wala message extract karo
     const { prompt } = await req.json();
 
-    // Gemini API ko call karo aur live streaming response mango
+    // Agar galti se khali sawal aaya toh yahi rok do
+    if (!prompt) {
+      return new Response("Sawal khali hai", { status: 400 });
+    }
+
     const result = await streamText({
       model: google('gemini-1.5-flash'),
       system: "You are a helpful AI assistant in a collaborative developer workspace. You provide clear, concise, and accurate answers. Always format code blocks beautifully in Markdown.",
       prompt: prompt,
     });
 
-    // Error fixed: toTextStreamResponse() use karna hai latest version ke liye
     return result.toTextStreamResponse();
     
   } catch (error) {
-    console.error("AI API Error:", error);
+    // Ye asali error Vercel ke dashboard (Logs) mein print hoga
+    console.error("AI API Asali Error:", error);
     return new Response("Error connecting to AI", { status: 500 });
   }
 }
