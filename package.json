@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.10",
+    "@ai-sdk/react": "^4.0.19",
     "@base-ui/react": "^1.6.0",
     "@liveblocks/client": "^3.22.0",
     "@liveblocks/react": "^3.22.0",
@@ -22,6 +24,7 @@
     "@tiptap/starter-kit": "^3.27.3",
     "@tiptap/suggestion": "^3.27.3",
     "@tiptap/y-tiptap": "^3.0.6",
+    "ai": "^7.0.18",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.23.0",
