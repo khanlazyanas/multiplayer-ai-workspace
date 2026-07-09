@@ -13,16 +13,14 @@ export async function POST(req: Request) {
     }
 
     const result = await streamText({
-      // Wapas apna sabse fast aur naya model use kar rahe hain
-      model: google('gemini-1.5-flash'),
+      // Taskmind ki API key ke liye sabse safe aur fast model
+      model: google('gemini-pro'),
       system: "You are a helpful AI assistant in a collaborative developer workspace. You provide clear, concise, and accurate answers. Always format code blocks beautifully in Markdown.",
       prompt: prompt,
     });
 
-    // 🔥 YAHAN HAI ASALI FIX 🔥
-    // Frontend (useCompletion) ko yahi format chahiye. VS code ka error ignore karo.
-    // @ts-ignore
-    return result.toDataStreamResponse();
+    // Wapas original aur sahi function (ab koi error nahi aayega)
+    return result.toTextStreamResponse();
     
   } catch (error) {
     console.error("AI API Error:", error);
