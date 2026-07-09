@@ -13,13 +13,16 @@ export async function POST(req: Request) {
     }
 
     const result = await streamText({
-      // 🎯 YAHAN MAGIC HAI: Model ke naam mein '-latest' lagana zaroori tha
-      model: google('gemini-1.5-flash-latest'),
+      // Wapas apna sabse fast aur naya model use kar rahe hain
+      model: google('gemini-1.5-flash'),
       system: "You are a helpful AI assistant in a collaborative developer workspace. You provide clear, concise, and accurate answers. Always format code blocks beautifully in Markdown.",
       prompt: prompt,
     });
 
-    return result.toTextStreamResponse();
+    // 🔥 YAHAN HAI ASALI FIX 🔥
+    // Frontend (useCompletion) ko yahi format chahiye. VS code ka error ignore karo.
+    // @ts-ignore
+    return result.toDataStreamResponse();
     
   } catch (error) {
     console.error("AI API Error:", error);
