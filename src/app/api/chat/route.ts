@@ -14,15 +14,15 @@ export async function POST(req: Request) {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     
     if (!apiKey) {
-      return new Response("Backend ko API Key nahi mili!", { status: 500 });
+      return new Response("API Key missing hai!", { status: 500 });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // 🔥 THE ULTIMATE STABLE MODEL: Ise koi deprecate nahi kar sakta
-    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
+    // 🔥 YAHAN MODEL NAME BILKUL SAHI LIKHA HAI: gemini-2.5-flash
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const aiPrompt = `You are a helpful AI assistant in a collaborative developer workspace. You provide clear, concise, and accurate answers. Always format code blocks beautifully in Markdown. User prompt: ${prompt}`;
+    const aiPrompt = `You are a helpful AI assistant. Answer in English: ${prompt}`;
 
     const result = await model.generateContent(aiPrompt);
     const text = result.response.text();
@@ -31,6 +31,6 @@ export async function POST(req: Request) {
     
   } catch (error: any) {
     console.error("AI API Error:", error);
-    return new Response(error.message || "Google API Crash ho gayi", { status: 500 });
+    return new Response(error.message, { status: 500 });
   }
 }
