@@ -1,18 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension } from "@liveblocks/react-tiptap";
 import Mention from "@tiptap/extension-mention";
 import suggestion from "./suggestion";
-import { useCompletion } from "@ai-sdk/react"; 
 
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
-
-  const { complete, isLoading } = useCompletion({
-    api: "/api/chat",
-  });
+  // Naya aur simple loading state
+  const [isLoading, setIsLoading] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -54,22 +52,29 @@ export default function Editor() {
             const finalPrompt = promptText.replace(/@/g, '').trim();
 
             if (finalPrompt) {
-              complete(finalPrompt).then((response) => {
-                // DEBUGGER: Agar AI ka answer aaya, toh pop-up aayega
-                if (response) {
-                  alert("✅ AI Answer Aaya:\n" + response.substring(0, 50) + "..."); 
-                  
-                  // Tiptap State Fix (Latest state uthana zaroori hai async ke baad)
-                  const latestState = view.state; 
-                  const tr = latestState.tr;
-                  tr.insertText(`\n\n🤖 AI:\n${response}\n\n`, latestState.selection.to);
-                  view.dispatch(tr);
-                } else {
-                  alert("❌ Vercel ne API Call successful ki, par Response KHALI (Empty) bheja!");
-                }
-              }).catch(err => {
-                alert("❌ API Call fail ho gayi: " + err.message);
+              // Yahan humne simple Fetch API lagayi hai jo kabhi fail nahi hogi
+              setIsLoading(true);
+              
+              fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: finalPrompt })
+              })
+              .then(async (res) => {
+                if (!res.ok) throw new Error("API request failed");
+                const text = await res.text(); // Backend se answer padho
+                
+                const latestState = view.state;
+                const tr = latestState.tr;
+                tr.insertText(`\n\n🤖 AI:\n${text}\n\n`, latestState.selection.to);
+                view.dispatch(tr);
+              })
+              .catch((err) => {
                 console.error(err);
+                alert("❌ AI se connect karne mein problem hui.");
+              })
+              .finally(() => {
+                setIsLoading(false);
               });
             }
             return true; 
