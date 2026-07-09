@@ -13,13 +13,12 @@ export async function POST(req: Request) {
     }
 
     const result = await streamText({
-      // Taskmind ki API key ke liye sabse safe aur fast model
-      model: google('gemini-pro'),
+      // 🔥 EXACT FIX YAHAN HAI: 'gemini-pro' ki jagah 'gemini-1.0-pro' 
+      model: google('gemini-1.0-pro'),
       system: "You are a helpful AI assistant in a collaborative developer workspace. You provide clear, concise, and accurate answers. Always format code blocks beautifully in Markdown.",
       prompt: prompt,
     });
 
-    // Wapas original aur sahi function (ab koi error nahi aayega)
     return result.toTextStreamResponse();
     
   } catch (error) {
