@@ -11,15 +11,16 @@ export async function POST(req: Request) {
       return new Response("Sawal khali hai", { status: 400 });
     }
 
-    // 🔥 FIX: Taskmind wala aur Naya dono keys check kar raha hai
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     
     if (!apiKey) {
-      return new Response("Backend ko API Key nahi mili! Vercel Environment Variables check karo.", { status: 500 });
+      return new Response("Backend ko API Key nahi mili!", { status: 500 });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    // 🔥 EXACT TASKMIND FIX: Yahan model ka naam gemini-2.5-flash kar diya hai
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const aiPrompt = `You are a helpful AI assistant in a collaborative developer workspace. You provide clear, concise, and accurate answers. Always format code blocks beautifully in Markdown. User prompt: ${prompt}`;
 
@@ -30,7 +31,6 @@ export async function POST(req: Request) {
     
   } catch (error: any) {
     console.error("AI API Error:", error);
-    // Asali error frontend ko bhej rahe hain
     return new Response(error.message || "Google API Crash ho gayi", { status: 500 });
   }
 }
