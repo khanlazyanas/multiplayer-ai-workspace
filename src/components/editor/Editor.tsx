@@ -9,7 +9,6 @@ import suggestion from "./suggestion";
 
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
-  // Naya aur simple loading state
   const [isLoading, setIsLoading] = useState(false);
 
   const editor = useEditor({
@@ -52,7 +51,6 @@ export default function Editor() {
             const finalPrompt = promptText.replace(/@/g, '').trim();
 
             if (finalPrompt) {
-              // Yahan humne simple Fetch API lagayi hai jo kabhi fail nahi hogi
               setIsLoading(true);
               
               fetch("/api/chat", {
@@ -61,8 +59,11 @@ export default function Editor() {
                 body: JSON.stringify({ prompt: finalPrompt })
               })
               .then(async (res) => {
-                if (!res.ok) throw new Error("API request failed");
-                const text = await res.text(); // Backend se answer padho
+                const text = await res.text();
+                // 🔥 FIX: Agar backend fail hua, toh uski asali error message pakdo
+                if (!res.ok) {
+                  throw new Error(text); 
+                }
                 
                 const latestState = view.state;
                 const tr = latestState.tr;
@@ -71,7 +72,8 @@ export default function Editor() {
               })
               .catch((err) => {
                 console.error(err);
-                alert("❌ AI se connect karne mein problem hui.");
+                // 🔥 FIX: Alert mein ab seedha asali bimari likhi aayegi!
+                alert("❌ ERROR: " + err.message);
               })
               .finally(() => {
                 setIsLoading(false);
