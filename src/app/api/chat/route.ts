@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// 🔥 MAGIC FIX: Yeh Edge runtime cold-boot delay ko 0 kar dega!
-export const runtime = 'edge';
+// 🔥 200% FIX: Vercel ka timeout default 10s se badhakar 60s kar diya!
+// Ab Vercel beech mein connection nahi kaatega chahe code kitna bhi lamba ho.
+export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -23,6 +24,7 @@ export async function POST(req: Request) {
 
     const aiPrompt = `You are a helpful AI assistant in a collaborative developer workspace. You provide clear, concise, and accurate answers. Always format code blocks beautifully in Markdown. User prompt: ${prompt}`;
 
+    // Yahan AI ko apna poora time milega code generate karne ka
     const result = await model.generateContent(aiPrompt);
     const text = result.response.text();
 
