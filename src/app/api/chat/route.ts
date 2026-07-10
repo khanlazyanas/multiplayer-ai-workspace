@@ -1,7 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// 🔥 200% FIX: Vercel ka timeout default 10s se badhakar 60s kar diya!
-// Ab Vercel beech mein connection nahi kaatega chahe code kitna bhi lamba ho.
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
@@ -20,15 +18,28 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-
     const aiPrompt = `You are a helpful AI assistant in a collaborative developer workspace. You provide clear, concise, and accurate answers. Always format code blocks beautifully in Markdown. User prompt: ${prompt}`;
 
-    // Yahan AI ko apna poora time milega code generate karne ka
-    const result = await model.generateContent(aiPrompt);
-    const text = result.response.text();
-
-    return new Response(text, { status: 200 });
+    try {
+      // 🚀 KOSHISH 1: Sabse naya model try karo
+      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      const result = await model.generateContent(aiPrompt);
+      return new Response(result.response.text(), { status: 200 });
+      
+    } catch (primaryError: any) {
+      // 🛡️ FALLBACK: Agar naya model busy hai (503 Error), toh backup model use karo
+      if (primaryError.message.includes("503") || primaryError.message.includes("high demand")) {
+        console.log("Primary model is busy. Switching to fallback model...");
+        
+        // Tumhari key par available backup model
+        const fallbackModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const fallbackResult = await fallbackModel.generateContent(aiPrompt);
+        return new Response(fallbackResult.response.text(), { status: 200 });
+      }
+      
+      // Agar koi aur error ho toh wapas phenk do
+      throw primaryError; 
+    }
     
   } catch (error: any) {
     console.error("AI API Error:", error);
