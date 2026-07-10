@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// 🔥 MAGIC FIX: Yeh Edge runtime cold-boot delay ko 0 kar dega!
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
@@ -18,8 +19,6 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // 🔥 MASTER FIX: Koi version number nahi. Ye hamesha active model uthayega!
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const aiPrompt = `You are a helpful AI assistant in a collaborative developer workspace. You provide clear, concise, and accurate answers. Always format code blocks beautifully in Markdown. User prompt: ${prompt}`;
