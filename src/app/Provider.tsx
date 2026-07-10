@@ -1,13 +1,12 @@
 "use client";
 
 import { ReactNode } from "react";
-import { LiveblocksProvider } from "@liveblocks/react";
+import { LiveblocksProvider } from "@liveblocks/react/suspense";
 
 export function Provider({ children }: { children: ReactNode }) {
   return (
-    <LiveblocksProvider 
-      publicApiKey={process.env.NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY || ""}
-    >
+    // Puraani public API key hata kar, humne apna naya auth endpoint laga diya hai
+    <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
       {children}
     </LiveblocksProvider>
   );
