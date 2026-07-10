@@ -19,10 +19,10 @@ export async function POST(req: Request) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // 🔥 YAHAN MODEL NAME BILKUL SAHI LIKHA HAI: gemini-2.5-flash
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // 🔥 MASTER FIX: Koi version number nahi. Ye hamesha active model uthayega!
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-    const aiPrompt = `You are a helpful AI assistant. Answer in English: ${prompt}`;
+    const aiPrompt = `You are a helpful AI assistant in a collaborative developer workspace. You provide clear, concise, and accurate answers. Always format code blocks beautifully in Markdown. User prompt: ${prompt}`;
 
     const result = await model.generateContent(aiPrompt);
     const text = result.response.text();
