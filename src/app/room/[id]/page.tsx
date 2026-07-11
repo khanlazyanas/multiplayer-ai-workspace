@@ -6,6 +6,7 @@ import Editor from "@/components/editor/Editor";
 import { useMyPresence } from "@liveblocks/react/suspense";
 import { UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
+import { ActiveUsers } from "@/components/live/ActiveUsers";
 
 function WorkspaceCanvas({ roomId }: { roomId: string }) {
   const [, updateMyPresence] = useMyPresence();
@@ -25,13 +26,19 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
     >
       <LiveCursors />
       
-      {/* 🚀 Header */}
+      {/* 🚀 Cleaned Header */}
       <div className="w-full max-w-5xl flex justify-between items-center px-6 mb-8 z-20">
         <Link href="/" className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg font-medium transition-colors border border-slate-700">
           ← Back to Dashboard
         </Link>
-        <div className="flex items-center gap-3 bg-slate-800/80 px-4 py-2 rounded-full border border-slate-700 backdrop-blur-sm shadow-md">
-          <span className="text-sm text-slate-300 font-medium hidden sm:block">Room: {roomId.slice(0, 8)}...</span>
+        <div className="flex items-center gap-4 bg-slate-800/80 px-4 py-2 rounded-full border border-slate-700 backdrop-blur-sm shadow-md">
+          <span className="text-sm text-slate-400 font-mono hidden sm:block border-r border-slate-700 pr-4">
+            {roomId.slice(0, 8)}
+          </span>
+          
+          {/* 🔥 Ye raha humara naya Live Avatars Component */}
+          <ActiveUsers />
+          
           <UserButton />
         </div>
       </div>
