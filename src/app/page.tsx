@@ -8,7 +8,6 @@ export default function Home() {
   const router = useRouter();
 
   const createNewWorkspace = () => {
-    // Ek unique ID generate karte hain nayi file ke liye
     const roomId = crypto.randomUUID();
     router.push(`/room/${roomId}`);
   };
@@ -16,7 +15,7 @@ export default function Home() {
   if (!isLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-900 text-sky-500 animate-pulse font-medium">
-        Loading BizFlow Dashboard... ⏳
+        Loading Workspace Dashboard... ⏳
       </div>
     );
   }
@@ -27,9 +26,9 @@ export default function Home() {
       <header className="flex justify-between items-center p-6 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/20">
-            <span className="text-white text-xl font-bold">B</span>
+            <span className="text-white text-xl font-bold">W</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">BizFlow</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Multiplayer Workspace</h1>
         </div>
         <div>
           {!isSignedIn ? (
