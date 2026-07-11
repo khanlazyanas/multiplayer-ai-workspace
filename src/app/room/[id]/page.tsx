@@ -8,14 +8,27 @@ import { UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { ActiveUsers } from "@/components/live/ActiveUsers";
 import { DocumentTitle } from "@/components/live/DocumentTitle";
+import { useEffect } from "react";
 
 function WorkspaceCanvas({ roomId }: { roomId: string }) {
   const [, updateMyPresence] = useMyPresence();
   const { isLoaded, isSignedIn } = useAuth();
 
+  // 🔥 Naya logic: Jab bhi koi is room mein aaye, isko history mein save kar lo
+  useEffect(() => {
+    if (roomId) {
+      const saved = localStorage.getItem("recent_workspaces");
+      let workspaces = saved ? JSON.parse(saved) : [];
+      // Agar room pehle se history mein nahi hai, toh add kar do (max 6 rooms rakhenge)
+      if (!workspaces.includes(roomId)) {
+        workspaces = [roomId, ...workspaces].slice(0, 6);
+        localStorage.setItem("recent_workspaces", JSON.stringify(workspaces));
+      }
+    }
+  }, [roomId]);
+
   if (!isLoaded || !isSignedIn) return null;
 
-  // Safe slice logic jo humne pehle fix kiya tha
   const displayRoomId = roomId ? roomId.slice(0, 8) : "Loading";
 
   return (
@@ -36,7 +49,6 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
         </Link>
         <div className="flex items-center gap-4 bg-slate-800/80 px-4 py-2 rounded-full border border-slate-700 backdrop-blur-sm shadow-md">
           
-          {/* 🚀 Humara naya Editable Title Component */}
           <div className="hidden sm:block border-r border-slate-700 pr-4">
             <DocumentTitle initialTitle={`Workspace-${displayRoomId}`} />
           </div>

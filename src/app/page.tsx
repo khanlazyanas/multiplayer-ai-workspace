@@ -2,10 +2,23 @@
 
 import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
+  
+  // Naya State: Recent Workspaces store karne ke liye
+  const [recentWorkspaces, setRecentWorkspaces] = useState<string[]>([]);
+
+  // Client side par history load karo
+  useEffect(() => {
+    const saved = localStorage.getItem("recent_workspaces");
+    if (saved) {
+      setRecentWorkspaces(JSON.parse(saved));
+    }
+  }, []);
 
   const createNewWorkspace = () => {
     const roomId = crypto.randomUUID();
@@ -44,23 +57,47 @@ export default function Home() {
       </header>
 
       {/* Main Dashboard Area */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6">
+      <main className="flex-1 flex flex-col items-center p-10 max-w-5xl mx-auto w-full">
         {!isSignedIn ? (
-          <div className="text-center max-w-md">
+          <div className="text-center mt-20 max-w-md mx-auto">
             <h2 className="text-3xl font-extrabold mb-4 text-slate-100">Your AI-Powered Workspace</h2>
             <p className="text-slate-400 mb-8">Sign in to start creating real-time collaborative documents with your team.</p>
           </div>
         ) : (
-          <div className="text-center">
-            <h2 className="text-4xl font-extrabold mb-4 text-white">Welcome back!</h2>
-            <p className="text-slate-400 mb-10 text-lg">Create a new workspace and share the link with your team.</p>
-            
-            <button 
-              onClick={createNewWorkspace}
-              className="bg-sky-500 hover:bg-sky-400 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_30px_rgba(14,165,233,0.3)] hover:shadow-[0_0_40px_rgba(14,165,233,0.5)] transform hover:-translate-y-1"
-            >
-              + Create New Workspace
-            </button>
+          <div className="w-full flex flex-col items-center">
+            <div className="text-center mb-12 mt-10">
+              <h2 className="text-4xl font-extrabold mb-4 text-white">Welcome back!</h2>
+              <p className="text-slate-400 mb-8 text-lg">Create a new workspace or open a recent one.</p>
+              
+              <button 
+                onClick={createNewWorkspace}
+                className="bg-sky-500 hover:bg-sky-400 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_30px_rgba(14,165,233,0.3)] hover:shadow-[0_0_40px_rgba(14,165,233,0.5)] transform hover:-translate-y-1"
+              >
+                + Create New Workspace
+              </button>
+            </div>
+
+            {/* 🔥 Recent Workspaces Section */}
+            {recentWorkspaces.length > 0 && (
+              <div className="w-full mt-10">
+                <h3 className="text-xl font-bold text-slate-300 mb-6 border-b border-slate-800 pb-2">Recent Workspaces</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {recentWorkspaces.map((roomId) => (
+                    <Link href={`/room/${roomId}`} key={roomId}>
+                      <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl hover:bg-slate-800 hover:border-sky-500/50 transition-all cursor-pointer group shadow-lg">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition-colors">
+                            📄
+                          </div>
+                          <h4 className="font-semibold text-slate-200 truncate">Workspace-{roomId.slice(0,5)}</h4>
+                        </div>
+                        <p className="text-xs text-slate-500 font-mono truncate">ID: {roomId}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
