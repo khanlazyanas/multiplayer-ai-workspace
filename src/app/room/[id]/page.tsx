@@ -7,6 +7,7 @@ import { useMyPresence } from "@liveblocks/react/suspense";
 import { UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { ActiveUsers } from "@/components/live/ActiveUsers";
+import { DocumentTitle } from "@/components/live/DocumentTitle";
 
 function WorkspaceCanvas({ roomId }: { roomId: string }) {
   const [, updateMyPresence] = useMyPresence();
@@ -14,7 +15,7 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
 
   if (!isLoaded || !isSignedIn) return null;
 
-  // 🛡️ Error Fix: Ensure roomId is a string before slicing to prevent undefined crashes
+  // Safe slice logic jo humne pehle fix kiya tha
   const displayRoomId = roomId ? roomId.slice(0, 8) : "Loading";
 
   return (
@@ -34,10 +35,11 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
           ← Back to Dashboard
         </Link>
         <div className="flex items-center gap-4 bg-slate-800/80 px-4 py-2 rounded-full border border-slate-700 backdrop-blur-sm shadow-md">
-          {/* 🚀 Crash fixed here */}
-          <span className="text-sm text-slate-400 font-mono hidden sm:block border-r border-slate-700 pr-4">
-            {displayRoomId}...
-          </span>
+          
+          {/* 🚀 Humara naya Editable Title Component */}
+          <div className="hidden sm:block border-r border-slate-700 pr-4">
+            <DocumentTitle initialTitle={`Workspace-${displayRoomId}`} />
+          </div>
           
           <ActiveUsers />
           
@@ -61,7 +63,6 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
   );
 }
 
-// 🛡️ Safely handle params to prevent undefined passed as props
 export default function RoomPage({ params }: { params: any }) {
   const safeRoomId = params?.id || "default-room";
   
