@@ -3,29 +3,39 @@
 import { CollaborativeRoom } from "@/components/live/CollaborativeRoom";
 import { LiveCursors } from "@/components/live/LiveCursors";
 import Editor from "@/components/editor/Editor"; 
-import { useMyPresence } from "@liveblocks/react/suspense";
+import { useMyPresence, useOthersListener } from "@liveblocks/react/suspense"; // Added useOthersListener
 import { UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { ActiveUsers } from "@/components/live/ActiveUsers";
 import { DocumentTitle } from "@/components/live/DocumentTitle";
 import { useEffect } from "react";
+import toast from "react-hot-toast"; // Added import
 
 function WorkspaceCanvas({ roomId }: { roomId: string }) {
   const [, updateMyPresence] = useMyPresence();
   const { isLoaded, isSignedIn } = useAuth();
 
-  // 🔥 Naya logic: Jab bhi koi is room mein aaye, isko history mein save kar lo
+  // Save room to local storage history
   useEffect(() => {
     if (roomId) {
       const saved = localStorage.getItem("recent_workspaces");
       let workspaces = saved ? JSON.parse(saved) : [];
-      // Agar room pehle se history mein nahi hai, toh add kar do (max 6 rooms rakhenge)
       if (!workspaces.includes(roomId)) {
         workspaces = [roomId, ...workspaces].slice(0, 6);
         localStorage.setItem("recent_workspaces", JSON.stringify(workspaces));
       }
     }
   }, [roomId]);
+
+  // Listen for other users joining or leaving the room
+  useOthersListener(({ event, user }) => {
+    if (event.type === "enter") {
+      toast.success(`${user.info?.name || "Someone"} joined the workspace`);
+    }
+    if (event.type === "leave") {
+      toast(`${user.info?.name || "Someone"} left the workspace`, { icon: '👋' });
+    }
+  });
 
   if (!isLoaded || !isSignedIn) return null;
 
