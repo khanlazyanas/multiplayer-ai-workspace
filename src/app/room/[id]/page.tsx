@@ -28,11 +28,11 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
   }, [roomId]);
 
   // Listen for other users joining or leaving the room
-  useOthersListener(({ event, user }) => {
-    if (event.type === "enter") {
+  useOthersListener(({ type, user }) => {
+    if (type === "enter") {
       toast.success(`${user.info?.name || "Someone"} joined the workspace`);
     }
-    if (event.type === "leave") {
+    if (type === "leave") {
       toast(`${user.info?.name || "Someone"} left the workspace`, { icon: '👋' });
     }
   });
