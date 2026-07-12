@@ -8,7 +8,8 @@ import Mention from "@tiptap/extension-mention";
 import suggestion from "./suggestion";
 import { Toolbar } from "./Toolbar";
 import toast from "react-hot-toast";
-import { DocumentTitle } from "../live/DocumentTitle"; // 🔥 New Import
+import { DocumentTitle } from "../live/DocumentTitle";
+import { ActiveUsers } from "../live/ActiveUsers"; // 🔥 Imported ActiveUsers
 
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
@@ -136,10 +137,13 @@ export default function Editor() {
           <div className="w-3 h-3 rounded-full bg-green-500/80 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
         </div>
         
-        {/* 🔥 Replaced hardcoded title with DocumentTitle component */}
+        {/* Interactive Document Name Component */}
         <DocumentTitle />
         
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {/* 🔥 Active Users Avatars Component */}
+          <ActiveUsers />
+
           <button 
             onClick={copyLink}
             className="flex items-center gap-1.5 text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-white px-4 py-1.5 rounded-md shadow-lg transition-all"
