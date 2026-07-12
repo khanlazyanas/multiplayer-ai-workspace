@@ -6,6 +6,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension } from "@liveblocks/react-tiptap";
 import Mention from "@tiptap/extension-mention";
 import suggestion from "./suggestion";
+import { Toolbar } from "./Toolbar";
 
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
@@ -130,8 +131,9 @@ export default function Editor() {
         <div className="w-10"></div> {/* Spacer for perfect center alignment */}
       </div>
       
-      {/* Scrollable Editor Area */}
-      <div className="flex-1 overflow-y-auto p-5 md:p-10 w-full">
+      {/* Scrollable Editor Area with Fixed Div Nesting */}
+      <div className="flex-1 overflow-y-auto p-5 md:p-10 w-full relative">
+        <Toolbar editor={editor} />
         <EditorContent editor={editor} className="w-full h-full" />
       </div>
     </div>
