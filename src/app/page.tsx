@@ -9,10 +9,8 @@ export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
   
-  // Naya State: Recent Workspaces store karne ke liye
   const [recentWorkspaces, setRecentWorkspaces] = useState<string[]>([]);
 
-  // Client side par history load karo
   useEffect(() => {
     const saved = localStorage.getItem("recent_workspaces");
     if (saved) {
@@ -22,7 +20,8 @@ export default function Home() {
 
   const createNewWorkspace = () => {
     const roomId = crypto.randomUUID();
-    router.push(`/room/${roomId}`);
+    // Path updated from /room/ to /documents/
+    router.push(`/documents/${roomId}`);
   };
 
   if (!isLoaded) {
@@ -35,7 +34,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col">
-      {/* Navbar */}
       <header className="flex justify-between items-center p-6 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/20">
@@ -56,7 +54,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Dashboard Area */}
       <main className="flex-1 flex flex-col items-center p-10 max-w-5xl mx-auto w-full">
         {!isSignedIn ? (
           <div className="text-center mt-20 max-w-md mx-auto">
@@ -77,13 +74,13 @@ export default function Home() {
               </button>
             </div>
 
-            {/* 🔥 Recent Workspaces Section */}
             {recentWorkspaces.length > 0 && (
               <div className="w-full mt-10">
                 <h3 className="text-xl font-bold text-slate-300 mb-6 border-b border-slate-800 pb-2">Recent Workspaces</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {recentWorkspaces.map((roomId) => (
-                    <Link href={`/room/${roomId}`} key={roomId}>
+                    // Path updated from /room/ to /documents/
+                    <Link href={`/documents/${roomId}`} key={roomId}>
                       <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl hover:bg-slate-800 hover:border-sky-500/50 transition-all cursor-pointer group shadow-lg">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition-colors">
