@@ -95,6 +95,21 @@ export default function Editor() {
     },
   });
 
+  // Export Function - Adds ability to download content
+  const exportDocument = () => {
+    if (!editor) return;
+    const content = editor.getText();
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "my-workspace-document.txt";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   if (!editor) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] text-sky-400 font-medium animate-pulse">
@@ -115,20 +130,31 @@ export default function Editor() {
         </div>
       )}
 
-      {/* macOS Style Window Header */}
+      {/* macOS Style Window Header with Export Button */}
       <div className="bg-slate-900/80 backdrop-blur-md px-4 py-3 border-b border-slate-800/80 flex items-center justify-between shrink-0">
         <div className="flex space-x-2.5">
           <div className="w-3 h-3 rounded-full bg-red-500/80 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
           <div className="w-3 h-3 rounded-full bg-yellow-500/80 shadow-[0_0_5px_rgba(234,179,8,0.5)]"></div>
           <div className="w-3 h-3 rounded-full bg-green-500/80 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
         </div>
+        
         <div className="flex items-center gap-2 text-slate-400 text-xs md:text-sm font-medium tracking-wide">
           <svg className="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           live-workspace.md
         </div>
-        <div className="w-10"></div> {/* Spacer for perfect center alignment */}
+        
+        {/* Export Button */}
+        <button 
+          onClick={exportDocument}
+          className="flex items-center gap-1.5 text-xs font-semibold bg-slate-800 hover:bg-sky-500/20 text-slate-300 hover:text-sky-400 px-3 py-1.5 rounded-md border border-slate-700 hover:border-sky-500/30 transition-all"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export TXT
+        </button>
       </div>
       
       {/* Scrollable Editor Area with Fixed Div Nesting */}
