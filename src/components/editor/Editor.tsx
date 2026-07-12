@@ -7,7 +7,8 @@ import { useLiveblocksExtension } from "@liveblocks/react-tiptap";
 import Mention from "@tiptap/extension-mention";
 import suggestion from "./suggestion";
 import { Toolbar } from "./Toolbar";
-import toast from "react-hot-toast"; // 🔥 Added toast for notifications
+import toast from "react-hot-toast";
+import { DocumentTitle } from "../live/DocumentTitle"; // 🔥 New Import
 
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
@@ -101,10 +102,9 @@ export default function Editor() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success("Document exported successfully!"); // Success toast
+    toast.success("Document exported successfully!");
   };
 
-  // 🔥 New Share Logic
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Invite link copied to clipboard!");
@@ -136,15 +136,10 @@ export default function Editor() {
           <div className="w-3 h-3 rounded-full bg-green-500/80 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
         </div>
         
-        <div className="flex items-center gap-2 text-slate-400 text-xs md:text-sm font-medium tracking-wide ml-8">
-          <svg className="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          live-workspace.md
-        </div>
+        {/* 🔥 Replaced hardcoded title with DocumentTitle component */}
+        <DocumentTitle />
         
         <div className="flex gap-2">
-          {/* 🔥 New Share Button */}
           <button 
             onClick={copyLink}
             className="flex items-center gap-1.5 text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-white px-4 py-1.5 rounded-md shadow-lg transition-all"
