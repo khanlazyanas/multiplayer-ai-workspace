@@ -1,9 +1,8 @@
 "use client";
 
-import { useOthers, useSelf } from "@liveblocks/react";
+import { useOthers, useSelf } from "@liveblocks/react/suspense";
 
 export const ActiveUsers = () => {
-  // Liveblocks hooks to get current users in the room
   const others = useOthers();
   const currentUser = useSelf();
   
@@ -14,7 +13,9 @@ export const ActiveUsers = () => {
       {/* Current User Avatar */}
       {currentUser && (
         <div 
-          className="h-7 w-7 rounded-full bg-sky-500 ring-2 ring-slate-900 flex items-center justify-center text-[10px] font-bold text-white shadow-md z-10" 
+          className="h-7 w-7 rounded-full ring-2 ring-slate-900 flex items-center justify-center text-[10px] font-bold text-white shadow-md z-10" 
+          // 🔥 FIX: Added 'as string' to satisfy TypeScript
+          style={{ backgroundColor: (currentUser.info?.color as string) || '#0ea5e9' }}
           title="You"
         >
           You
@@ -22,13 +23,15 @@ export const ActiveUsers = () => {
       )}
       
       {/* Other Users Avatars */}
-      {others.slice(0, 3).map(({ connectionId }) => (
+      {others.slice(0, 3).map(({ connectionId, info }) => (
         <div 
           key={connectionId} 
-          className="h-7 w-7 rounded-full bg-indigo-500 ring-2 ring-slate-900 flex items-center justify-center text-[10px] font-bold text-white shadow-md z-0"
-          title={`User ${connectionId}`}
+          className="h-7 w-7 rounded-full ring-2 ring-slate-900 flex items-center justify-center text-[10px] font-bold text-white shadow-md z-0"
+          // 🔥 FIX: Added 'as string' here as well
+          style={{ backgroundColor: (info?.color as string) || '#6366f1' }}
+          title={(info?.name as string) || `User ${connectionId}`}
         >
-          U{String(connectionId).slice(-1)}
+          {(info?.name as string) ? (info?.name as string).charAt(0).toUpperCase() : `U${String(connectionId).slice(-1)}`}
         </div>
       ))}
 
