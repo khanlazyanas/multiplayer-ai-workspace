@@ -3,22 +3,19 @@
 import { useState, useRef, useEffect } from "react";
 import { useStorage, useMutation } from "@liveblocks/react";
 
-export const DocumentTitle = () => {
-  // 🔥 Fetch title from Liveblocks storage, default to 'live-workspace.md'
-  const roomTitle = useStorage((root: any) => root.title) || "live-workspace.md";
+// 🔥 Fix: Type definition add kar di jisme initialTitle optional hai
+export const DocumentTitle = ({ initialTitle }: { initialTitle?: string }) => {
+  // 🔥 Ab agar storage mein title nahi hoga, toh ye initialTitle ko use karega
+  const roomTitle = useStorage((root: any) => root.title) || initialTitle || "live-workspace.md";
   
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Local state lagana zaroori hai taaki type karte time keyboard lag na kare
   const [localTitle, setLocalTitle] = useState(roomTitle);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 🔥 Mutation hook to update title in real-time for everyone in the room
   const updateTitle = useMutation(({ storage }, newTitle: string) => {
     storage.set("title", newTitle);
   }, []);
 
-  // Jab koi aur user naam change kare, toh hamara local text bhi update ho jaye (agar hum edit nahi kar rahe)
   useEffect(() => {
     if (!isEditing) {
       setLocalTitle(roomTitle);
@@ -34,9 +31,9 @@ export const DocumentTitle = () => {
   const handleSave = () => {
     setIsEditing(false);
     if (localTitle.trim() && localTitle !== roomTitle) {
-      updateTitle(localTitle); // 🔥 Push naya naam to all online users
+      updateTitle(localTitle);
     } else {
-      setLocalTitle(roomTitle); // Agar empty enter kiya, toh purana naam wapas le aao
+      setLocalTitle(roomTitle);
     }
   };
 
@@ -51,11 +48,10 @@ export const DocumentTitle = () => {
           ref={inputRef}
           value={localTitle}
           onChange={(e) => setLocalTitle(e.target.value)}
-          onBlur={handleSave} // Jab user baahar click kare
+          onBlur={handleSave}
           onKeyDown={(e) => {
-            if (e.key === "Enter") handleSave(); // Enter dabane par save
+            if (e.key === "Enter") handleSave();
             if (e.key === "Escape") {
-              // Escape dabane par cancel karke purana naam laao
               setIsEditing(false);
               setLocalTitle(roomTitle);
             }
