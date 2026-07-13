@@ -1,6 +1,5 @@
 "use client";
 
-// 🔥 FIX: Direct import use kiya hai taaki Vercel tree-shaking me isko delete na kare
 import { Editor, BubbleMenu } from "@tiptap/react";
 
 export const Toolbar = ({ editor }: { editor: Editor }) => {
@@ -11,6 +10,7 @@ export const Toolbar = ({ editor }: { editor: Editor }) => {
   return (
     <BubbleMenu 
       editor={editor} 
+      tippyOptions={{ duration: 100, placement: 'top' }}
       className="flex bg-slate-800 border border-slate-700 shadow-2xl rounded-lg overflow-hidden p-1 gap-1 z-50"
     >
       <button
