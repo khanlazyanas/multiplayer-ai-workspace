@@ -3,22 +3,41 @@
 import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-// 🔥 FIX 1: Naye button component ko import kiya hai
 import { CreateWorkspaceButton } from "@/components/CreateWorkspaceButton"; 
+
+// TypeScript interface API response ke liye
+interface WorkspaceData {
+  _id: string;
+  roomId: string;
+  title: string;
+  updatedAt: string;
+}
 
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
   
-  const [recentWorkspaces, setRecentWorkspaces] = useState<string[]>([]);
+  const [workspaces, setWorkspaces] = useState<WorkspaceData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // 🔥 FIX: Real MongoDB data fetch kar rahe hain
   useEffect(() => {
-    const saved = localStorage.getItem("recent_workspaces");
-    if (saved) {
-      setRecentWorkspaces(JSON.parse(saved));
-    }
-  }, []);
+    const fetchWorkspaces = async () => {
+      if (!isSignedIn) return;
+      try {
+        const res = await fetch("/api/workspaces");
+        if (res.ok) {
+          const data = await res.json();
+          setWorkspaces(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch workspaces", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // 🔥 FIX 2: Purana 'createNewWorkspace' function hata diya kyunki ab API backend sambhal raha hai
+    fetchWorkspaces();
+  }, [isSignedIn]);
 
   if (!isLoaded) {
     return (
@@ -62,29 +81,37 @@ export default function Home() {
               <h2 className="text-4xl font-extrabold mb-4 text-white">Welcome back!</h2>
               <p className="text-slate-400 mb-8 text-lg">Create a new workspace or open a recent one.</p>
               
-              {/* 🔥 FIX 3: Purane button tag ko hata kar seedha component render kiya hai */}
               <CreateWorkspaceButton />
             </div>
 
-            {recentWorkspaces.length > 0 && (
+            {isLoading ? (
+              <div className="mt-10 text-slate-400 animate-pulse">Loading your workspaces...</div>
+            ) : workspaces.length > 0 ? (
               <div className="w-full mt-10">
-                <h3 className="text-xl font-bold text-slate-300 mb-6 border-b border-slate-800 pb-2">Recent Workspaces</h3>
+                <h3 className="text-xl font-bold text-slate-300 mb-6 border-b border-slate-800 pb-2">Your Workspaces</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {recentWorkspaces.map((roomId) => (
-                    <Link href={`/documents/${roomId}`} key={roomId}>
+                  {workspaces.map((ws) => (
+                    <Link href={`/documents/${ws.roomId}`} key={ws._id}>
                       <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl hover:bg-slate-800 hover:border-sky-500/50 transition-all cursor-pointer group shadow-lg">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition-colors">
                             📄
                           </div>
-                          <h4 className="font-semibold text-slate-200 truncate">Workspace-{roomId.slice(0,5)}</h4>
+                          <h4 className="font-semibold text-slate-200 truncate" title={ws.title}>{ws.title}</h4>
                         </div>
-                        <p className="text-xs text-slate-500 font-mono truncate">ID: {roomId}</p>
+                        <p className="text-xs text-slate-500 font-mono truncate">ID: {ws.roomId.slice(0,8)}...</p>
+                        <p className="text-[10px] text-slate-600 mt-2">
+                          Updated: {new Date(ws.updatedAt).toLocaleDateString()}
+                        </p>
                       </div>
                     </Link>
                   ))}
                 </div>
               </div>
+            ) : (
+               <div className="mt-10 text-slate-500 bg-slate-900/50 p-8 rounded-xl border border-slate-800 text-center w-full max-w-md">
+                 No workspaces found. Create your first one above!
+               </div>
             )}
           </div>
         )}
