@@ -1,13 +1,13 @@
 "use client";
 
 import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+// 🔥 FIX 1: Naye button component ko import kiya hai
+import { CreateWorkspaceButton } from "@/components/CreateWorkspaceButton"; 
 
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
-  const router = useRouter();
   
   const [recentWorkspaces, setRecentWorkspaces] = useState<string[]>([]);
 
@@ -18,11 +18,7 @@ export default function Home() {
     }
   }, []);
 
-  const createNewWorkspace = () => {
-    const roomId = crypto.randomUUID();
-    // Path updated from /room/ to /documents/
-    router.push(`/documents/${roomId}`);
-  };
+  // 🔥 FIX 2: Purana 'createNewWorkspace' function hata diya kyunki ab API backend sambhal raha hai
 
   if (!isLoaded) {
     return (
@@ -66,12 +62,8 @@ export default function Home() {
               <h2 className="text-4xl font-extrabold mb-4 text-white">Welcome back!</h2>
               <p className="text-slate-400 mb-8 text-lg">Create a new workspace or open a recent one.</p>
               
-              <button 
-                onClick={createNewWorkspace}
-                className="bg-sky-500 hover:bg-sky-400 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_30px_rgba(14,165,233,0.3)] hover:shadow-[0_0_40px_rgba(14,165,233,0.5)] transform hover:-translate-y-1"
-              >
-                + Create New Workspace
-              </button>
+              {/* 🔥 FIX 3: Purane button tag ko hata kar seedha component render kiya hai */}
+              <CreateWorkspaceButton />
             </div>
 
             {recentWorkspaces.length > 0 && (
@@ -79,7 +71,6 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-slate-300 mb-6 border-b border-slate-800 pb-2">Recent Workspaces</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {recentWorkspaces.map((roomId) => (
-                    // Path updated from /room/ to /documents/
                     <Link href={`/documents/${roomId}`} key={roomId}>
                       <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl hover:bg-slate-800 hover:border-sky-500/50 transition-all cursor-pointer group shadow-lg">
                         <div className="flex items-center gap-3 mb-3">
