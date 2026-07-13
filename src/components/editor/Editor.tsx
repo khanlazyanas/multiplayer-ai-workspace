@@ -113,28 +113,30 @@ export default function Editor() {
     // Dynamic import to avoid Next.js SSR issues with window objects
     const html2pdf = (await import('html2pdf.js')).default;
     
-    const element = document.querySelector('.ProseMirror'); // Selects the editor content
+    const element = document.querySelector('.ProseMirror') as HTMLElement; 
+    
     if (!element) {
       toast.error("Could not find content to export");
       return;
     }
 
+    // 🔥 FIX: 'as const' laga diya taaki TS strict string literal samajh jaye
     const opt = {
       margin: 0.5,
       filename: 'my-workspace.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' as const }
     };
 
     // Styling hack for PDF to ensure text is visible on white background
-    const originalColor = (element as HTMLElement).style.color;
-    (element as HTMLElement).style.color = '#000000'; 
+    const originalColor = element.style.color;
+    element.style.color = '#000000'; 
 
     toast.loading("Generating PDF...", { id: "pdf-toast" });
     
     html2pdf().set(opt).from(element).save().then(() => {
-      (element as HTMLElement).style.color = originalColor; // Restore original color
+      element.style.color = originalColor; // Restore original color
       toast.success("PDF exported successfully!", { id: "pdf-toast" });
     }).catch(() => {
       toast.error("Failed to generate PDF", { id: "pdf-toast" });
