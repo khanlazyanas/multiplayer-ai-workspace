@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useStorage, useMutation } from "@liveblocks/react";
+// 🔥 FIX: Changed to /suspense to match the rest of the application
+import { useStorage, useMutation } from "@liveblocks/react/suspense";
 
-// 🔥 Fix: Type definition add kar di jisme initialTitle optional hai
 export const DocumentTitle = ({ initialTitle }: { initialTitle?: string }) => {
-  // 🔥 Ab agar storage mein title nahi hoga, toh ye initialTitle ko use karega
   const roomTitle = useStorage((root: any) => root.title) || initialTitle || "live-workspace.md";
   
   const [isEditing, setIsEditing] = useState(false);

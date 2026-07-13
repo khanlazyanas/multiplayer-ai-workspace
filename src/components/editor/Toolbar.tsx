@@ -1,3 +1,5 @@
+"use client"; // 🔥 FIX: Added missing use client directive
+
 import { Editor } from "@tiptap/react";
 import * as TipTapReact from "@tiptap/react";
 

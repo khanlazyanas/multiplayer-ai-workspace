@@ -1,3 +1,5 @@
+"use client"; // 🔥 FIX: Added missing use client directive
+
 import { useOthers } from "@liveblocks/react/suspense";
 
 const COLORS = ["#E57373", "#9575CD", "#4FC3F7", "#81C784", "#FFF176", "#FF8A65"];
