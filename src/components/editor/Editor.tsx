@@ -9,7 +9,7 @@ import suggestion from "./suggestion";
 import { Toolbar } from "./Toolbar";
 import toast from "react-hot-toast";
 import { DocumentTitle } from "../live/DocumentTitle";
-import { ActiveUsers } from "../live/ActiveUsers"; // 🔥 Imported ActiveUsers
+import { ActiveUsers } from "../live/ActiveUsers";
 
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
@@ -32,7 +32,7 @@ export default function Editor() {
     ],
     editorProps: {
       attributes: {
-        class: "focus:outline-none min-h-full text-slate-200 text-base md:text-lg cursor-text leading-relaxed",
+        class: "focus:outline-none min-h-full text-slate-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror", // Added ProseMirror class for PDF selector
       },
       handleKeyDown: (view, event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -91,19 +91,54 @@ export default function Editor() {
     },
   });
 
-  const exportDocument = () => {
+  const exportDocumentTXT = () => {
     if (!editor) return;
     const content = editor.getText();
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "my-workspace-document.txt";
+    link.download = "my-workspace.txt";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success("Document exported successfully!");
+    toast.success("TXT exported successfully!");
+  };
+
+  // 🔥 Naya PDF Export Function
+  const exportDocumentPDF = async () => {
+    if (!editor) return;
+    
+    // Dynamic import to avoid Next.js SSR issues with window objects
+    const html2pdf = (await import('html2pdf.js')).default;
+    
+    const element = document.querySelector('.ProseMirror'); // Selects the editor content
+    if (!element) {
+      toast.error("Could not find content to export");
+      return;
+    }
+
+    const opt = {
+      margin: 0.5,
+      filename: 'my-workspace.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Styling hack for PDF to ensure text is visible on white background
+    const originalColor = (element as HTMLElement).style.color;
+    (element as HTMLElement).style.color = '#000000'; 
+
+    toast.loading("Generating PDF...", { id: "pdf-toast" });
+    
+    html2pdf().set(opt).from(element).save().then(() => {
+      (element as HTMLElement).style.color = originalColor; // Restore original color
+      toast.success("PDF exported successfully!", { id: "pdf-toast" });
+    }).catch(() => {
+      toast.error("Failed to generate PDF", { id: "pdf-toast" });
+    });
   };
 
   const copyLink = () => {
@@ -130,43 +165,45 @@ export default function Editor() {
         </div>
       )}
 
-      <div className="bg-slate-900/80 backdrop-blur-md px-4 py-3 border-b border-slate-800/80 flex items-center justify-between shrink-0">
-        <div className="flex space-x-2.5">
+      <div className="bg-slate-900/80 backdrop-blur-md px-4 py-3 border-b border-slate-800/80 flex items-center justify-between shrink-0 overflow-x-auto">
+        <div className="flex space-x-2.5 min-w-fit pr-4">
           <div className="w-3 h-3 rounded-full bg-red-500/80 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
           <div className="w-3 h-3 rounded-full bg-yellow-500/80 shadow-[0_0_5px_rgba(234,179,8,0.5)]"></div>
           <div className="w-3 h-3 rounded-full bg-green-500/80 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
         </div>
         
-        {/* Interactive Document Name Component */}
         <DocumentTitle />
         
-        <div className="flex items-center gap-2">
-          {/* 🔥 Active Users Avatars Component */}
+        <div className="flex items-center gap-2 min-w-fit">
           <ActiveUsers />
 
           <button 
             onClick={copyLink}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-white px-4 py-1.5 rounded-md shadow-lg transition-all"
+            className="flex items-center gap-1.5 text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-white px-3 py-1.5 rounded-md shadow-lg transition-all"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
             Share
           </button>
 
+          {/* 🔥 PDF Export Button */}
           <button 
-            onClick={exportDocument}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-slate-800 hover:bg-sky-500/20 text-slate-300 hover:text-sky-400 px-3 py-1.5 rounded-md border border-slate-700 hover:border-sky-500/30 transition-all"
+            onClick={exportDocumentPDF}
+            className="flex items-center gap-1.5 text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 px-3 py-1.5 rounded-md border border-red-500/30 transition-all"
+            title="Download as PDF"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export TXT
+            PDF
+          </button>
+
+          <button 
+            onClick={exportDocumentTXT}
+            className="flex items-center gap-1.5 text-xs font-semibold bg-slate-800 hover:bg-sky-500/20 text-slate-300 hover:text-sky-400 px-3 py-1.5 rounded-md border border-slate-700 hover:border-sky-500/30 transition-all"
+            title="Download as plain text"
+          >
+            TXT
           </button>
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-5 md:p-10 w-full relative">
+      <div className="flex-1 overflow-y-auto p-5 md:p-10 w-full relative bg-white/5 md:bg-transparent">
         <Toolbar editor={editor} />
         <EditorContent editor={editor} className="w-full h-full" />
       </div>
