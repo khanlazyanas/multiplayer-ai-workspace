@@ -1,10 +1,7 @@
-"use client"; // 🔥 FIX: Added missing use client directive
+"use client";
 
-import { Editor } from "@tiptap/react";
-import * as TipTapReact from "@tiptap/react";
-
-// 🔥 TS Bypass Hack: Force extract BubbleMenu without strict type checking
-const BubbleMenu = (TipTapReact as any).BubbleMenu;
+// 🔥 FIX: Direct import use kiya hai taaki Vercel tree-shaking me isko delete na kare
+import { Editor, BubbleMenu } from "@tiptap/react";
 
 export const Toolbar = ({ editor }: { editor: Editor }) => {
   if (!editor) {
