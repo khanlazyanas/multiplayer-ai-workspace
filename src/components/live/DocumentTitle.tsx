@@ -1,19 +1,40 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-// 🔥 FIX: Changed to /suspense to match the rest of the application
 import { useStorage, useMutation } from "@liveblocks/react/suspense";
+import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
 
 export const DocumentTitle = ({ initialTitle }: { initialTitle?: string }) => {
-  const roomTitle = useStorage((root: any) => root.title) || initialTitle || "live-workspace.md";
+  const roomTitle = useStorage((root: any) => root.title) || initialTitle || "Untitled Workspace";
+  const params = useParams(); // URL se roomId nikalne ke liye
   
   const [isEditing, setIsEditing] = useState(false);
   const [localTitle, setLocalTitle] = useState(roomTitle);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const updateTitle = useMutation(({ storage }, newTitle: string) => {
+  // 1. Liveblocks me update karna (Real-time for other users)
+  const updateLiveblocksTitle = useMutation(({ storage }, newTitle: string) => {
     storage.set("title", newTitle);
   }, []);
+
+  // 2. MongoDB me update karna (For Dashboard)
+  const updateDatabaseTitle = async (newTitle: string) => {
+    if (!params?.id) return;
+    
+    try {
+      const res = await fetch(`/api/workspaces/${params.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle }),
+      });
+
+      if (!res.ok) throw new Error("Failed to sync title to database");
+    } catch (error) {
+      console.error(error);
+      toast.error("Title not synced to dashboard");
+    }
+  };
 
   useEffect(() => {
     if (!isEditing) {
@@ -29,8 +50,11 @@ export const DocumentTitle = ({ initialTitle }: { initialTitle?: string }) => {
 
   const handleSave = () => {
     setIsEditing(false);
-    if (localTitle.trim() && localTitle !== roomTitle) {
-      updateTitle(localTitle);
+    const finalTitle = localTitle.trim();
+    
+    if (finalTitle && finalTitle !== roomTitle) {
+      updateLiveblocksTitle(finalTitle); // Real-time sync
+      updateDatabaseTitle(finalTitle);   // Database sync
     } else {
       setLocalTitle(roomTitle);
     }
