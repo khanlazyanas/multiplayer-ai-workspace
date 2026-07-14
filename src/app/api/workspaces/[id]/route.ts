@@ -5,7 +5,8 @@ import { currentUser } from "@clerk/nextjs/server";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  // 🔥 FIX: Next.js 15+ mein params ek Promise hota hai
+  props: { params: Promise<{ id: string }> } 
 ) {
   try {
     const user = await currentUser();
@@ -14,6 +15,9 @@ export async function PATCH(
     }
 
     const { title } = await req.json();
+    
+    // 🔥 FIX: Params ko await karke nikalna padega
+    const params = await props.params;
     const roomId = params.id;
 
     if (!title) {
@@ -22,9 +26,8 @@ export async function PATCH(
 
     await connectToDatabase();
 
-    // MongoDB me title update kar rahe hain
     const updatedWorkspace = await Workspace.findOneAndUpdate(
-      { roomId, ownerId: user.id }, // Make sure owner hi update kar paye
+      { roomId, ownerId: user.id }, 
       { title },
       { new: true }
     );
@@ -40,10 +43,10 @@ export async function PATCH(
   }
 }
 
-
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  // 🔥 FIX: Same fix applied to DELETE route
+  props: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await currentUser();
@@ -51,11 +54,14 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    // 🔥 FIX: Params ko await karke nikalna padega
+    const params = await props.params;
+    const roomId = params.id;
+
     await connectToDatabase();
 
-    // Database se workspace delete kar rahe hain (sirf owner delete kar sakta hai)
     const deletedWorkspace = await Workspace.findOneAndDelete({
-      roomId: params.id,
+      roomId: roomId,
       ownerId: user.id, 
     });
 
@@ -69,4 +75,3 @@ export async function DELETE(
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
-
