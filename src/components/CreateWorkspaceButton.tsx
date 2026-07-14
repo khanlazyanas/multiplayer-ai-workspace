@@ -10,7 +10,7 @@ export const CreateWorkspaceButton = () => {
 
   const handleCreateWorkspace = async () => {
     setIsLoading(true);
-    toast.loading("Setting up your AI workspace...", { id: "create-workspace" });
+    toast.loading("Setting up workspace...", { id: "create-workspace" });
 
     try {
       // Backend API ko call kar rahe hain jo MongoDB me room banayegi
@@ -23,14 +23,14 @@ export const CreateWorkspaceButton = () => {
       }
 
       const workspace = await response.json();
-      toast.success("Workspace created successfully!", { id: "create-workspace" });
+      toast.success("Workspace created", { id: "create-workspace" });
 
       // Naye generate hue roomId par redirect kar do
       router.push(`/documents/${workspace.roomId}`);
       
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create workspace. Try again.", { id: "create-workspace" });
+      toast.error("Failed to create workspace", { id: "create-workspace" });
     } finally {
       setIsLoading(false);
     }
@@ -40,12 +40,20 @@ export const CreateWorkspaceButton = () => {
     <button
       onClick={handleCreateWorkspace}
       disabled={isLoading}
-      className="bg-sky-500 hover:bg-sky-400 text-white font-bold py-3 px-8 rounded-full shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      className="bg-white hover:bg-zinc-200 text-black font-semibold py-2.5 px-5 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.1)] active:scale-95"
     >
       {isLoading ? (
-        <span className="animate-pulse">Creating... ⏳</span>
+        <div className="flex items-center gap-2">
+          <div className="w-3.5 h-3.5 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
+          <span>Creating...</span>
+        </div>
       ) : (
-        "+ Create New Workspace"
+        <>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          New Workspace
+        </>
       )}
     </button>
   );
