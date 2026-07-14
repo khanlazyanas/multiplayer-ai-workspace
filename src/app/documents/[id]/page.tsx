@@ -9,6 +9,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast"; 
 import { DocumentTitle } from "@/components/live/DocumentTitle"; 
+// 🔥 IMPORT ADDED HERE
+import { ActiveCollaborators } from "@/components/live/ActiveCollaborators"; 
 
 function WorkspaceCanvas({ roomId }: { roomId: string }) {
   const [, updateMyPresence] = useMyPresence();
@@ -28,12 +30,12 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
 
   useOthersListener(({ type, user }) => {
     if (type === "enter") {
-      toast.success(`${user.info?.name || "Someone"} joined`, {
+      toast.success(`${(user.info?.name as string) || "Someone"} joined`, {
         style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
       });
     }
     if (type === "leave") {
-      toast(`${user.info?.name || "Someone"} left`, { 
+      toast(`${(user.info?.name as string) || "Someone"} left`, { 
         icon: '👋',
         style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
       });
@@ -104,13 +106,18 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
             <span className="hidden sm:block">{isCopying ? "Copied" : "Share"}</span>
           </button>
 
+          {/* 🔥 ACTIVE COLLABORATORS ADDED HERE */}
+          <div className="hidden md:flex items-center">
+            <ActiveCollaborators />
+          </div>
+
           {/* VERCEL-STYLE LIVE SYNC DOT */}
-          <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-500 tracking-wider uppercase">
+          <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-500 tracking-wider uppercase pl-2">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="hidden md:block">Sync</span>
+            <span className="hidden lg:block">Sync</span>
           </div>
           
           <div className="pl-4 border-l border-zinc-800 flex items-center">
@@ -121,15 +128,11 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
 
       {/* STEALTH A4 DOCUMENT CANVAS */}
       <main className="flex-1 overflow-y-auto py-10 px-4 md:px-0 flex justify-center w-full z-10 relative">
-        
-        {/* Subtle Violet Ambient Glow */}
         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-violet-900/10 blur-[120px] rounded-full pointer-events-none"></div>
 
-        {/* The Document Paper */}
         <div className="w-full max-w-4xl bg-[#0A0A0A] border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-xl p-8 md:p-16 min-h-[850px] relative z-20">
           <Editor />
         </div>
-        
       </main>
     </div>
   );
