@@ -1,35 +1,53 @@
-"use client"; // 🔥 FIX: Added missing use client directive
+"use client";
 
 import { useOthers } from "@liveblocks/react/suspense";
-
-const COLORS = ["#E57373", "#9575CD", "#4FC3F7", "#81C784", "#FFF176", "#FF8A65"];
 
 export function LiveCursors() {
   const others = useOthers();
 
   return (
     <>
-      {others.map(({ connectionId, presence }) => {
-        if (presence == null || !presence.cursor) return null;
+      {others.map(({ connectionId, presence, info }) => {
+        // Agar user ka cursor screen par nahi hai, toh kuch mat dikhao
+        if (!presence?.cursor) return null;
+
+        // 🔥 Asli Name aur Color nikal rahe hain Liveblocks info se
+        const color = (info?.color as string) || "#8B5CF6";
+        const name = (info?.name as string) || "Anonymous";
 
         return (
           <div
             key={connectionId}
-            className="pointer-events-none absolute top-0 left-0 z-50 transition-transform duration-100 ease-out"
+            className="pointer-events-none absolute top-0 left-0 z-[9999] transition-transform duration-100 ease-out"
             style={{
               transform: `translateX(${presence.cursor.x}px) translateY(${presence.cursor.y}px)`,
             }}
           >
-            {/* SVG Cursor Icon */}
+            {/* SLEEK SVG CURSOR ICON */}
             <svg
-              className="w-6 h-6"
-              style={{ fill: COLORS[connectionId % COLORS.length] }}
-              stroke="white"
-              strokeWidth="1.5"
-              viewBox="0 0 24 24"
+              className="relative shadow-sm drop-shadow-md"
+              width="24"
+              height="36"
+              viewBox="0 0 24 36"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <path d="M5.653 2.653a.5.5 0 00-.69.69l14 14a.5.5 0 00.847-.417L18.435 9l5.053-5.053a.5.5 0 00-.707-.707L18.435 7.583V1.69a.5.5 0 00-.847-.417l-11.935 11.935z" />
+              <path
+                d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z"
+                fill={color}
+                stroke="white"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
             </svg>
+
+            {/* 🔥 PREMIUM NAME TAG BOX */}
+            <div
+              className="absolute left-5 top-5 rounded-md px-2 py-1 text-[11px] font-bold text-white whitespace-nowrap shadow-md transition-opacity duration-300"
+              style={{ backgroundColor: color }}
+            >
+              {name}
+            </div>
           </div>
         );
       })}
