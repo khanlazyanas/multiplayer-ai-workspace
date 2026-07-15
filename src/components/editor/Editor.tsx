@@ -10,6 +10,7 @@ import { Toolbar } from "./Toolbar";
 import toast from "react-hot-toast";
 import { DocumentTitle } from "../live/DocumentTitle";
 import { ActiveUsers } from "../live/ActiveUsers";
+import { FloatingBubbleMenu } from "./FloatingBubbleMenu";
 
 // 🔥 NAYE IMPORTS SLASH COMMANDS KE LIYE
 import SlashCommands from './slashExtension'
@@ -224,6 +225,7 @@ export default function Editor() {
       
       <div className="flex-1 overflow-y-auto p-5 md:p-10 w-full relative bg-transparent custom-scrollbar">
         <Toolbar editor={editor} />
+        <FloatingBubbleMenu editor={editor} />
         <EditorContent editor={editor} className="w-full h-full" />
       </div>
     </div>
