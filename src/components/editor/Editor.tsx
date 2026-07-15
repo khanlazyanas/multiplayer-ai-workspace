@@ -11,6 +11,10 @@ import toast from "react-hot-toast";
 import { DocumentTitle } from "../live/DocumentTitle";
 import { ActiveUsers } from "../live/ActiveUsers";
 
+// 🔥 NAYE IMPORTS SLASH COMMANDS KE LIYE
+import SlashCommands from './slashExtension'
+import slashSuggestion from './slashSuggestion'
+
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
   const [isLoading, setIsLoading] = useState(false);
@@ -25,14 +29,18 @@ export default function Editor() {
       liveblocks,
       Mention.configure({
         HTMLAttributes: {
-          class: 'bg-sky-500/20 text-sky-400 rounded px-1.5 py-0.5 font-semibold shadow-sm',
+          class: 'bg-zinc-800 text-violet-400 rounded px-1.5 py-0.5 font-semibold shadow-sm', // Updated to match OLED theme
         },
         suggestion,
+      }),
+      // 🔥 SLASH COMMANDS EXTENSION ADDED HERE
+      SlashCommands.configure({
+        suggestion: slashSuggestion,
       }),
     ],
     editorProps: {
       attributes: {
-        class: "focus:outline-none min-h-full text-slate-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror", // Added ProseMirror class for PDF selector
+        class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror", // Updated text color to zinc-200 for OLED theme
       },
       handleKeyDown: (view, event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -77,7 +85,9 @@ export default function Editor() {
             })
             .catch((err) => {
               console.error(err);
-              toast.error("Error generating AI response!");
+              toast.error("Error generating AI response!", {
+                style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
+              });
             })
             .finally(() => {
               setIsLoading(false);
@@ -103,14 +113,14 @@ export default function Editor() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success("TXT exported successfully!");
+    toast.success("TXT exported successfully!", {
+      style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
+    });
   };
 
-  // 🔥 Naya PDF Export Function
   const exportDocumentPDF = async () => {
     if (!editor) return;
     
-    // Dynamic import to avoid Next.js SSR issues with window objects
     const html2pdf = (await import('html2pdf.js')).default;
     
     const element = document.querySelector('.ProseMirror') as HTMLElement; 
@@ -120,7 +130,6 @@ export default function Editor() {
       return;
     }
 
-    // 🔥 FIX: 'as const' laga diya taaki TS strict string literal samajh jaye
     const opt = {
       margin: 0.5,
       filename: 'my-workspace.pdf',
@@ -129,45 +138,48 @@ export default function Editor() {
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' as const }
     };
 
-    // Styling hack for PDF to ensure text is visible on white background
     const originalColor = element.style.color;
     element.style.color = '#000000'; 
 
-    toast.loading("Generating PDF...", { id: "pdf-toast" });
+    toast.loading("Generating PDF...", { id: "pdf-toast", style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } });
     
     html2pdf().set(opt).from(element).save().then(() => {
-      element.style.color = originalColor; // Restore original color
-      toast.success("PDF exported successfully!", { id: "pdf-toast" });
+      element.style.color = originalColor; 
+      toast.success("PDF exported successfully!", { id: "pdf-toast", style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } });
     }).catch(() => {
-      toast.error("Failed to generate PDF", { id: "pdf-toast" });
+      toast.error("Failed to generate PDF", { id: "pdf-toast", style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } });
     });
   };
 
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    toast.success("Invite link copied to clipboard!");
+    toast.success("Invite link copied to clipboard!", {
+      style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
+    });
   };
 
   if (!editor) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] text-sky-400 font-medium animate-pulse">
+      <div className="flex items-center justify-center min-h-[60vh] text-zinc-500 font-medium animate-pulse">
         Initializing Workspace Engine...
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0B0F19] rounded-2xl shadow-[0_0_50px_rgba(14,165,233,0.05)] border border-slate-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
+    // 🔥 UPDATED TO OLED BLACK THEME
+    <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0A0A0A] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
       {isLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0B0F19]/60 backdrop-blur-sm transition-all duration-300">
-          <div className="bg-slate-800/90 text-sky-400 px-6 py-3 rounded-full text-sm md:text-base font-semibold flex items-center shadow-[0_0_30px_rgba(14,165,233,0.2)] border border-sky-500/30 animate-pulse">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-300">
+          <div className="bg-zinc-900 text-violet-400 px-6 py-3 rounded-full text-sm md:text-base font-semibold flex items-center shadow-[0_0_30px_rgba(139,92,246,0.2)] border border-violet-500/30 animate-pulse">
             <span className="mr-3 text-xl">✨</span> AI is analyzing document...
           </div>
         </div>
       )}
 
-      <div className="bg-slate-900/80 backdrop-blur-md px-4 py-3 border-b border-slate-800/80 flex items-center justify-between shrink-0 overflow-x-auto">
+      {/* Mac style header */}
+      <div className="bg-zinc-900/80 backdrop-blur-md px-4 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0 overflow-x-auto">
         <div className="flex space-x-2.5 min-w-fit pr-4">
           <div className="w-3 h-3 rounded-full bg-red-500/80 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
           <div className="w-3 h-3 rounded-full bg-yellow-500/80 shadow-[0_0_5px_rgba(234,179,8,0.5)]"></div>
@@ -181,12 +193,11 @@ export default function Editor() {
 
           <button 
             onClick={copyLink}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-white px-3 py-1.5 rounded-md shadow-lg transition-all"
+            className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 rounded-md shadow-lg transition-all"
           >
             Share
           </button>
 
-          {/* 🔥 PDF Export Button */}
           <button 
             onClick={exportDocumentPDF}
             className="flex items-center gap-1.5 text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 px-3 py-1.5 rounded-md border border-red-500/30 transition-all"
@@ -197,7 +208,7 @@ export default function Editor() {
 
           <button 
             onClick={exportDocumentTXT}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-slate-800 hover:bg-sky-500/20 text-slate-300 hover:text-sky-400 px-3 py-1.5 rounded-md border border-slate-700 hover:border-sky-500/30 transition-all"
+            className="flex items-center gap-1.5 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700 transition-all"
             title="Download as plain text"
           >
             TXT
@@ -205,7 +216,7 @@ export default function Editor() {
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-5 md:p-10 w-full relative bg-white/5 md:bg-transparent">
+      <div className="flex-1 overflow-y-auto p-5 md:p-10 w-full relative bg-transparent custom-scrollbar">
         <Toolbar editor={editor} />
         <EditorContent editor={editor} className="w-full h-full" />
       </div>
