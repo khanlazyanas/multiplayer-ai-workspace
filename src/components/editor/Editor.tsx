@@ -35,7 +35,13 @@ export default function Editor() {
       }),
       // 🔥 SLASH COMMANDS EXTENSION ADDED HERE
       SlashCommands.configure({
-        suggestion: slashSuggestion,
+        suggestion: {
+          char: '/',
+          command: ({ editor, range, props }: any) => {
+            props.command({ editor, range })
+          },
+          ...slashSuggestion,
+        }
       }),
     ],
     editorProps: {
