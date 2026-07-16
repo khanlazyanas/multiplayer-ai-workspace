@@ -212,11 +212,6 @@ export default function Editor() {
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
                 <span className="text-red-400">Offline</span>
               </>
-            ) : syncStatus === "syncing" ? (
-              <>
-                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-spin"></div>
-                <span className="text-yellow-400">Syncing...</span>
-              </>
             ) : (
               <>
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
