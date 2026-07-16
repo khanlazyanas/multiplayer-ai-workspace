@@ -1,3 +1,4 @@
+"use client";
 // @ts-ignore
 import { BubbleMenu } from '@tiptap/react';
 import React from 'react';
