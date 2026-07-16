@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension } from "@liveblocks/react-tiptap";
+// 🔥 NAYA IMPORT: Liveblocks Sync Status ke liye
+import { useStatus } from "@liveblocks/react/suspense"; 
 import Mention from "@tiptap/extension-mention";
 import suggestion from "./suggestion";
 import { Toolbar } from "./Toolbar";
@@ -11,14 +13,16 @@ import toast from "react-hot-toast";
 import { DocumentTitle } from "../live/DocumentTitle";
 import { ActiveUsers } from "../live/ActiveUsers";
 import { FloatingBubbleMenu } from "./FloatingBubbleMenu";
-import { DocumentHeader } from "./DocumentHeader"; // 🔥 ADDED PREMIUM COVER HEADER
+import { DocumentHeader } from "./DocumentHeader"; 
 
-// 🔥 NAYE IMPORTS SLASH COMMANDS KE LIYE
+// 🔥 IMPORTS SLASH COMMANDS KE LIYE
 import SlashCommands from './slashExtension'
 import slashSuggestion from './slashSuggestion'
 
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
+  // 🔥 CLOUD SYNC STATUS HOOK
+  const syncStatus = useStatus(); 
   const [isLoading, setIsLoading] = useState(false);
 
   const editor = useEditor({
@@ -35,7 +39,6 @@ export default function Editor() {
         },
         suggestion,
       }),
-      // 🔥 SLASH COMMANDS EXTENSION ADDED HERE
       SlashCommands.configure({
         suggestion: {
           char: '/',
@@ -175,7 +178,6 @@ export default function Editor() {
   }
 
   return (
-    // 🔥 UPDATED TO OLED BLACK THEME
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0A0A0A] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
       {isLoading && (
@@ -197,6 +199,32 @@ export default function Editor() {
         <DocumentTitle />
         
         <div className="flex items-center gap-2 min-w-fit">
+          
+          {/* 🔥 REAL-TIME CLOUD SYNC INDICATOR */}
+          <div className="flex items-center gap-1.5 mr-2 bg-[#111] px-2.5 py-1 rounded-md border border-zinc-800 text-[11px] font-mono hidden sm:flex">
+            {syncStatus === "initial" || syncStatus === "connecting" || syncStatus === "reconnecting" ? (
+              <>
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                <span className="text-zinc-400">Connecting...</span>
+              </>
+            ) : syncStatus === "disconnected" ? (
+              <>
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                <span className="text-red-400">Offline</span>
+              </>
+            ) : syncStatus === "syncing" ? (
+              <>
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-spin"></div>
+                <span className="text-yellow-400">Syncing...</span>
+              </>
+            ) : (
+              <>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                <span className="text-emerald-400">Saved to Cloud</span>
+              </>
+            )}
+          </div>
+
           <ActiveUsers />
 
           <button 
@@ -224,19 +252,13 @@ export default function Editor() {
         </div>
       </div>
       
-      {/* 🔥 THE NEW AESTHETIC WORKSPACE AREA */}
       <div className="flex-1 overflow-y-auto w-full relative bg-transparent custom-scrollbar">
-        
-        {/* The Premium Cover Image and Emoji Header */}
         <DocumentHeader />
-
-        {/* The Text Editor Area */}
         <div className="p-5 md:p-10 max-w-4xl mx-auto w-full">
           <Toolbar editor={editor} />
           <FloatingBubbleMenu editor={editor} />
           <EditorContent editor={editor} className="w-full h-full mt-2" />
         </div>
-        
       </div>
     </div>
   );
