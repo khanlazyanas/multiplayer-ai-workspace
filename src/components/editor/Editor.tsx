@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { DocumentTitle } from "../live/DocumentTitle";
 import { ActiveUsers } from "../live/ActiveUsers";
 import { FloatingBubbleMenu } from "./FloatingBubbleMenu";
+import { DocumentHeader } from "./DocumentHeader"; // 🔥 ADDED PREMIUM COVER HEADER
 
 // 🔥 NAYE IMPORTS SLASH COMMANDS KE LIYE
 import SlashCommands from './slashExtension'
@@ -30,7 +31,7 @@ export default function Editor() {
       liveblocks,
       Mention.configure({
         HTMLAttributes: {
-          class: 'bg-zinc-800 text-violet-400 rounded px-1.5 py-0.5 font-semibold shadow-sm', // Updated to match OLED theme
+          class: 'bg-zinc-800 text-violet-400 rounded px-1.5 py-0.5 font-semibold shadow-sm',
         },
         suggestion,
       }),
@@ -47,7 +48,7 @@ export default function Editor() {
     ],
     editorProps: {
       attributes: {
-        class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror", // Updated text color to zinc-200 for OLED theme
+        class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror",
       },
       handleKeyDown: (view, event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -223,10 +224,19 @@ export default function Editor() {
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-5 md:p-10 w-full relative bg-transparent custom-scrollbar">
-        <Toolbar editor={editor} />
-        <FloatingBubbleMenu editor={editor} />
-        <EditorContent editor={editor} className="w-full h-full" />
+      {/* 🔥 THE NEW AESTHETIC WORKSPACE AREA */}
+      <div className="flex-1 overflow-y-auto w-full relative bg-transparent custom-scrollbar">
+        
+        {/* The Premium Cover Image and Emoji Header */}
+        <DocumentHeader />
+
+        {/* The Text Editor Area */}
+        <div className="p-5 md:p-10 max-w-4xl mx-auto w-full">
+          <Toolbar editor={editor} />
+          <FloatingBubbleMenu editor={editor} />
+          <EditorContent editor={editor} className="w-full h-full mt-2" />
+        </div>
+        
       </div>
     </div>
   );
