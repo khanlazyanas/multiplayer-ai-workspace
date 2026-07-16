@@ -1,3 +1,4 @@
+// @ts-ignore
 import { BubbleMenu } from '@tiptap/react';
 import React from 'react';
 
@@ -8,7 +9,7 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
     <BubbleMenu
       editor={editor}
       tippyOptions={{ duration: 150, placement: 'top', animation: 'shift-away' }}
-      className="flex items-center gap-1 bg-[#0A0A0A] border border-zinc-800 shadow-[0_15px_40px_rgba(0,0,0,0.6)] rounded-lg p-1.5 z-50 backdrop-blur-xl"
+      className="flex items-center gap-1 bg-[#0A0A0A] border border-zinc-800 shadow-[0_15px_40px_rgba(0,0,0,0.6)] rounded-lg p-1.5 z-[9999] backdrop-blur-xl"
     >
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
