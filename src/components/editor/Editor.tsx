@@ -140,7 +140,7 @@ export default function Editor() {
     });
   };
 
-  // 🔥 PDF GENERATOR MASTER FIX
+  // 🔥 THE "GOD MODE" PDF GENERATOR FIX
   const exportDocumentPDF = async () => {
     if (!editor) return;
 
@@ -155,18 +155,16 @@ export default function Editor() {
       const printContainer = document.createElement('div');
       printContainer.innerHTML = editor.getHTML();
       
-      // 🔥 CRITICAL FIX: Har ek element se class aur style hata do taaki Tailwind ka 'lab' color apply hi na ho
       const allElements = printContainer.querySelectorAll('*');
       allElements.forEach((el) => {
         el.removeAttribute('class');
         el.removeAttribute('style');
       });
       
-      // Basic, safe, HEX-only styling for the PDF container
       printContainer.style.width = '800px';
       printContainer.style.padding = '40px';
-      printContainer.style.color = '#000000'; // Pure Hex Black
-      printContainer.style.backgroundColor = '#ffffff'; // Pure Hex White
+      printContainer.style.color = '#000000'; 
+      printContainer.style.backgroundColor = '#ffffff'; 
       printContainer.style.fontFamily = 'Arial, sans-serif';
       printContainer.style.fontSize = '16px';
       printContainer.style.lineHeight = '1.6';
@@ -181,13 +179,22 @@ export default function Editor() {
         margin: [0.5, 0.5, 0.5, 0.5],
         filename: 'workspace-document.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false }, 
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          logging: false,
+          // 🔥 YAHAN HAI ASLI MAGIC!
+          // Clone banne ke baad saari Tailwind CSS ko uda do taaki 'lab' color error hi na aaye
+          onclone: (clonedDoc: any) => {
+            const styles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
+            styles.forEach((styleTag: any) => styleTag.remove());
+          }
+        }, 
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
 
       await (html2pdf as any)().set(opt).from(printContainer).save();
       
-      // Cleanup
       document.body.removeChild(printContainer);
       
       toast.success("PDF exported successfully!", { 
@@ -230,6 +237,7 @@ export default function Editor() {
         </div>
       )}
 
+      {/* Mac style header */}
       <div className="bg-zinc-900/80 backdrop-blur-md px-4 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0 overflow-x-auto">
         <div className="flex space-x-2.5 min-w-fit pr-4">
           <div className="w-3 h-3 rounded-full bg-red-500/80 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
