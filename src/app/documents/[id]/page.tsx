@@ -131,7 +131,8 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-violet-900/10 blur-[120px] rounded-full pointer-events-none"></div>
 
         <div className="w-full max-w-4xl bg-[#0A0A0A] border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-xl p-8 md:p-16 min-h-[850px] relative z-20">
-          <Editor />
+          {/* 🔥 FIX: 'key' prop added to force re-render on new document load */}
+          <Editor key={roomId} />
         </div>
       </main>
     </div>

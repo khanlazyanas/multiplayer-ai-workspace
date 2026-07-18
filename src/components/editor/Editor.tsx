@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // 🔥 useEffect import kiya
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension } from "@liveblocks/react-tiptap";
-// 🔥 NAYA IMPORT: Liveblocks Sync Status ke liye
 import { useStatus } from "@liveblocks/react/suspense"; 
 import Mention from "@tiptap/extension-mention";
 import suggestion from "./suggestion";
@@ -15,18 +14,23 @@ import { ActiveUsers } from "../live/ActiveUsers";
 import { FloatingBubbleMenu } from "./FloatingBubbleMenu";
 import { DocumentHeader } from "./DocumentHeader"; 
 
-// 🔥 IMPORTS SLASH COMMANDS KE LIYE
-import SlashCommands from './slashExtension'
-import slashSuggestion from './slashSuggestion'
+import SlashCommands from './slashExtension';
+import slashSuggestion from './slashSuggestion';
 
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
-  // 🔥 CLOUD SYNC STATUS HOOK
   const syncStatus = useStatus(); 
   const [isLoading, setIsLoading] = useState(false);
+  
+  // 🔥 NAYI STATE: Typing detect karne ke liye
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
+    // 🔥 JAB BHI TUM TYPE KAROGE, YE TRIGGER HOGA
+    onUpdate: () => {
+      setIsSyncing(true);
+    },
     extensions: [
       StarterKit.configure({
         // @ts-ignore
@@ -112,6 +116,17 @@ export default function Editor() {
     },
   });
 
+  // 🔥 DEBOUNCE EFFECT: Typing rukne ke 1 second baad wapas 'Saved to Cloud' karega
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (isSyncing) {
+      timeout = setTimeout(() => {
+        setIsSyncing(false);
+      }, 1000);
+    }
+    return () => clearTimeout(timeout);
+  }, [isSyncing]);
+
   const exportDocumentTXT = () => {
     if (!editor) return;
     const content = editor.getText();
@@ -133,7 +148,6 @@ export default function Editor() {
     if (!editor) return;
     
     const html2pdf = (await import('html2pdf.js')).default;
-    
     const element = document.querySelector('.ProseMirror') as HTMLElement; 
     
     if (!element) {
@@ -200,7 +214,7 @@ export default function Editor() {
         
         <div className="flex items-center gap-2 min-w-fit">
           
-          {/* 🔥 REAL-TIME CLOUD SYNC INDICATOR */}
+          {/* 🔥 REAL-TIME CLOUD SYNC INDICATOR (FIXED) */}
           <div className="flex items-center gap-1.5 mr-2 bg-[#111] px-2.5 py-1 rounded-md border border-zinc-800 text-[11px] font-mono hidden sm:flex">
             {syncStatus === "initial" || syncStatus === "connecting" || syncStatus === "reconnecting" ? (
               <>
@@ -212,8 +226,15 @@ export default function Editor() {
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
                 <span className="text-red-400">Offline</span>
               </>
+            ) : isSyncing ? (
+              <>
+                {/* 🟡 Jab Type Karoge tab ye dikhega */}
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-spin"></div>
+                <span className="text-yellow-400">Syncing...</span>
+              </>
             ) : (
               <>
+                {/* 🟢 Type rukne ke baad wapas ye dikhega */}
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                 <span className="text-emerald-400">Saved to Cloud</span>
               </>
