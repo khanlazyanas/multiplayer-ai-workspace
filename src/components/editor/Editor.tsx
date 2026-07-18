@@ -140,7 +140,7 @@ export default function Editor() {
     });
   };
 
-  // 🔥 THE "GOD MODE" PDF GENERATOR FIX
+  // 🔥 PDF GENERATOR FINAL FIX (No blank pages)
   const exportDocumentPDF = async () => {
     if (!editor) return;
 
@@ -152,28 +152,12 @@ export default function Editor() {
       const html2pdfModule = await import('html2pdf.js');
       const html2pdf = html2pdfModule.default || html2pdfModule;
       
-      const printContainer = document.createElement('div');
-      printContainer.innerHTML = editor.getHTML();
+      // Original element ko hi target karenge
+      const element = document.querySelector('.ProseMirror') as HTMLElement; 
       
-      const allElements = printContainer.querySelectorAll('*');
-      allElements.forEach((el) => {
-        el.removeAttribute('class');
-        el.removeAttribute('style');
-      });
-      
-      printContainer.style.width = '800px';
-      printContainer.style.padding = '40px';
-      printContainer.style.color = '#000000'; 
-      printContainer.style.backgroundColor = '#ffffff'; 
-      printContainer.style.fontFamily = 'Arial, sans-serif';
-      printContainer.style.fontSize = '16px';
-      printContainer.style.lineHeight = '1.6';
-      
-      printContainer.style.position = 'absolute';
-      printContainer.style.left = '-9999px';
-      printContainer.style.top = '0';
-      
-      document.body.appendChild(printContainer);
+      if (!element) {
+        throw new Error("Document content not found");
+      }
 
       const opt = {
         margin: [0.5, 0.5, 0.5, 0.5],
@@ -183,19 +167,31 @@ export default function Editor() {
           scale: 2, 
           useCORS: true, 
           logging: false,
-          // 🔥 YAHAN HAI ASLI MAGIC!
-          // Clone banne ke baad saari Tailwind CSS ko uda do taaki 'lab' color error hi na aaye
+          // 🔥 Asli magic yahan hai!
           onclone: (clonedDoc: any) => {
+            // 1. Crash rokne ke liye Tailwind CSS hatao
             const styles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
             styles.forEach((styleTag: any) => styleTag.remove());
+
+            // 2. Blank page rokne ke liye Clone par forcibly Black text & White bg lagao
+            const clonedEditor = clonedDoc.querySelector('.ProseMirror');
+            if (clonedEditor) {
+              clonedEditor.style.backgroundColor = '#ffffff';
+              clonedEditor.style.color = '#000000';
+              clonedEditor.style.padding = '20px';
+              
+              // Andar ke har ek element ka text black karo taaki white-on-white na ho
+              const allElements = clonedEditor.querySelectorAll('*');
+              allElements.forEach((el: any) => {
+                el.style.color = '#000000';
+              });
+            }
           }
         }, 
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
 
-      await (html2pdf as any)().set(opt).from(printContainer).save();
-      
-      document.body.removeChild(printContainer);
+      await (html2pdf as any)().set(opt).from(element).save();
       
       toast.success("PDF exported successfully!", { 
         id: toastId,
