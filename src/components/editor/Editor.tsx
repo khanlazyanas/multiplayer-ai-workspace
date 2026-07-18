@@ -140,52 +140,50 @@ export default function Editor() {
     });
   };
 
-  // 🔥 FINAL PDF FIX: Browser environment check & safe execution
+  // 🔥 PDF GENERATOR FIX
   const exportDocumentPDF = async () => {
     if (!editor) return;
-    
-    // Sirf browser environment mein PDF module load hoga
-    if (typeof window === 'undefined') return;
 
     const toastId = toast.loading("Preparing PDF...", { 
       style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } 
     });
 
     try {
-      // Dynamic import ki jagah direct require use kiya CSR ke liye
-      const html2pdf = require('html2pdf.js');
+      // PROPER DYNAMIC IMPORT FOR NEXT.JS CLIENT
+      const html2pdfModule = await import('html2pdf.js');
+      const html2pdf = html2pdfModule.default || html2pdfModule;
       
       const element = document.querySelector('.ProseMirror') as HTMLElement; 
       
       if (!element) {
-        toast.error("Could not find document content", { id: toastId });
-        return;
+        throw new Error("Document content not found");
       }
 
       const opt = {
         margin: [0.5, 0.5, 0.5, 0.5],
         filename: 'workspace-document.pdf',
-        image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
 
       const originalColor = element.style.color;
-      element.style.color = '#000000'; // Dark mode text ko black banaya
+      element.style.color = '#000000'; // Make text black for PDF
       
       // Execute PDF generation
-      await html2pdf().set(opt).from(element).save();
+      await (html2pdf as any)().set(opt).from(element).save();
       
-      element.style.color = originalColor; // Theme color wapas laya
+      element.style.color = originalColor; // Revert theme color
       
       toast.success("PDF exported successfully!", { 
         id: toastId,
         style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } 
       });
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("PDF Export Error:", err);
-      toast.error("Generation failed. Please try again.", { 
+      // 🔥 EXACT error dikhayega toast mein!
+      toast.error(`Error: ${err.message || "Failed to generate"}`, { 
         id: toastId,
         style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } 
       });
