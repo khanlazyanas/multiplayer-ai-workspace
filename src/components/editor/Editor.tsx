@@ -140,7 +140,7 @@ export default function Editor() {
     });
   };
 
-  // 🔥 THE ULTIMATE PDF GENERATOR FIX (Bypassing Modern CSS crashes)
+  // 🔥 PDF GENERATOR MASTER FIX
   const exportDocumentPDF = async () => {
     if (!editor) return;
 
@@ -152,13 +152,17 @@ export default function Editor() {
       const html2pdfModule = await import('html2pdf.js');
       const html2pdf = html2pdfModule.default || html2pdfModule;
       
-      // 1. Ek hidden isolated container banayenge
       const printContainer = document.createElement('div');
-      
-      // 2. Editor ka raw HTML usme daal denge (Bina UI wrappers ke)
       printContainer.innerHTML = editor.getHTML();
       
-      // 3. Basic safe styles apply karenge jisme koi "lab" ya "oklch" color na ho
+      // 🔥 CRITICAL FIX: Har ek element se class aur style hata do taaki Tailwind ka 'lab' color apply hi na ho
+      const allElements = printContainer.querySelectorAll('*');
+      allElements.forEach((el) => {
+        el.removeAttribute('class');
+        el.removeAttribute('style');
+      });
+      
+      // Basic, safe, HEX-only styling for the PDF container
       printContainer.style.width = '800px';
       printContainer.style.padding = '40px';
       printContainer.style.color = '#000000'; // Pure Hex Black
@@ -167,7 +171,6 @@ export default function Editor() {
       printContainer.style.fontSize = '16px';
       printContainer.style.lineHeight = '1.6';
       
-      // Ise screen se bahar chupa denge taaki user ko na dikhe
       printContainer.style.position = 'absolute';
       printContainer.style.left = '-9999px';
       printContainer.style.top = '0';
@@ -178,14 +181,13 @@ export default function Editor() {
         margin: [0.5, 0.5, 0.5, 0.5],
         filename: 'workspace-document.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false }, // Logging false rakha taaki console clear rahe
+        html2canvas: { scale: 2, useCORS: true, logging: false }, 
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
 
-      // Generation bypass CSS crash
       await (html2pdf as any)().set(opt).from(printContainer).save();
       
-      // Generation ke baad temporary div hata denge
+      // Cleanup
       document.body.removeChild(printContainer);
       
       toast.success("PDF exported successfully!", { 
@@ -228,7 +230,6 @@ export default function Editor() {
         </div>
       )}
 
-      {/* Mac style header */}
       <div className="bg-zinc-900/80 backdrop-blur-md px-4 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0 overflow-x-auto">
         <div className="flex space-x-2.5 min-w-fit pr-4">
           <div className="w-3 h-3 rounded-full bg-red-500/80 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
