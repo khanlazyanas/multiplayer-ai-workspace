@@ -140,7 +140,7 @@ export default function Editor() {
     });
   };
 
-  // 🔥 PDF GENERATOR FIX
+  // 🔥 THE ULTIMATE PDF GENERATOR FIX (Bypassing Modern CSS crashes)
   const exportDocumentPDF = async () => {
     if (!editor) return;
 
@@ -149,31 +149,44 @@ export default function Editor() {
     });
 
     try {
-      // PROPER DYNAMIC IMPORT FOR NEXT.JS CLIENT
       const html2pdfModule = await import('html2pdf.js');
       const html2pdf = html2pdfModule.default || html2pdfModule;
       
-      const element = document.querySelector('.ProseMirror') as HTMLElement; 
+      // 1. Ek hidden isolated container banayenge
+      const printContainer = document.createElement('div');
       
-      if (!element) {
-        throw new Error("Document content not found");
-      }
+      // 2. Editor ka raw HTML usme daal denge (Bina UI wrappers ke)
+      printContainer.innerHTML = editor.getHTML();
+      
+      // 3. Basic safe styles apply karenge jisme koi "lab" ya "oklch" color na ho
+      printContainer.style.width = '800px';
+      printContainer.style.padding = '40px';
+      printContainer.style.color = '#000000'; // Pure Hex Black
+      printContainer.style.backgroundColor = '#ffffff'; // Pure Hex White
+      printContainer.style.fontFamily = 'Arial, sans-serif';
+      printContainer.style.fontSize = '16px';
+      printContainer.style.lineHeight = '1.6';
+      
+      // Ise screen se bahar chupa denge taaki user ko na dikhe
+      printContainer.style.position = 'absolute';
+      printContainer.style.left = '-9999px';
+      printContainer.style.top = '0';
+      
+      document.body.appendChild(printContainer);
 
       const opt = {
         margin: [0.5, 0.5, 0.5, 0.5],
         filename: 'workspace-document.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2, useCORS: true, logging: false }, // Logging false rakha taaki console clear rahe
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
 
-      const originalColor = element.style.color;
-      element.style.color = '#000000'; // Make text black for PDF
+      // Generation bypass CSS crash
+      await (html2pdf as any)().set(opt).from(printContainer).save();
       
-      // Execute PDF generation
-      await (html2pdf as any)().set(opt).from(element).save();
-      
-      element.style.color = originalColor; // Revert theme color
+      // Generation ke baad temporary div hata denge
+      document.body.removeChild(printContainer);
       
       toast.success("PDF exported successfully!", { 
         id: toastId,
@@ -182,7 +195,6 @@ export default function Editor() {
 
     } catch (err: any) {
       console.error("PDF Export Error:", err);
-      // 🔥 EXACT error dikhayega toast mein!
       toast.error(`Error: ${err.message || "Failed to generate"}`, { 
         id: toastId,
         style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } 
