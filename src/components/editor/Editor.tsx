@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react"; // 🔥 useEffect import kiya
+import { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension } from "@liveblocks/react-tiptap";
@@ -21,13 +21,10 @@ export default function Editor() {
   const liveblocks = useLiveblocksExtension();
   const syncStatus = useStatus(); 
   const [isLoading, setIsLoading] = useState(false);
-  
-  // 🔥 NAYI STATE: Typing detect karne ke liye
   const [isSyncing, setIsSyncing] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
-    // 🔥 JAB BHI TUM TYPE KAROGE, YE TRIGGER HOGA
     onUpdate: () => {
       setIsSyncing(true);
     },
@@ -116,7 +113,6 @@ export default function Editor() {
     },
   });
 
-  // 🔥 DEBOUNCE EFFECT: Typing rukne ke 1 second baad wapas 'Saved to Cloud' karega
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     if (isSyncing) {
@@ -144,36 +140,53 @@ export default function Editor() {
     });
   };
 
+  // 🔥 PDF EXPORT FIX: TypeScript 'not callable' bypass included
   const exportDocumentPDF = async () => {
     if (!editor) return;
     
-    const html2pdf = (await import('html2pdf.js')).default;
-    const element = document.querySelector('.ProseMirror') as HTMLElement; 
-    
-    if (!element) {
-      toast.error("Could not find content to export");
-      return;
-    }
-
-    const opt = {
-      margin: 0.5,
-      filename: 'my-workspace.pdf',
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' as const }
-    };
-
-    const originalColor = element.style.color;
-    element.style.color = '#000000'; 
-
-    toast.loading("Generating PDF...", { id: "pdf-toast", style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } });
-    
-    html2pdf().set(opt).from(element).save().then(() => {
-      element.style.color = originalColor; 
-      toast.success("PDF exported successfully!", { id: "pdf-toast", style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } });
-    }).catch(() => {
-      toast.error("Failed to generate PDF", { id: "pdf-toast", style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } });
+    const toastId = toast.loading("Preparing PDF...", { 
+      style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } 
     });
+
+    try {
+      const html2pdfModule = await import('html2pdf.js');
+      const html2pdf = html2pdfModule.default ? html2pdfModule.default : html2pdfModule;
+      
+      const element = document.querySelector('.ProseMirror') as HTMLElement; 
+      
+      if (!element) {
+        toast.error("Could not find document content", { id: toastId });
+        return;
+      }
+
+      const opt = {
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: 'workspace-document.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+
+      const originalColor = element.style.color;
+      element.style.color = '#000000'; 
+      
+      // 🔥 'as any' bypass lag gaya yahan
+      await (html2pdf as any)().set(opt).from(element).save();
+      
+      element.style.color = originalColor; 
+      
+      toast.success("PDF exported successfully!", { 
+        id: toastId,
+        style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } 
+      });
+
+    } catch (err) {
+      console.error("PDF Error:", err);
+      toast.error("Failed to generate PDF.", { 
+        id: toastId,
+        style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } 
+      });
+    }
   };
 
   const copyLink = () => {
@@ -214,7 +227,6 @@ export default function Editor() {
         
         <div className="flex items-center gap-2 min-w-fit">
           
-          {/* 🔥 REAL-TIME CLOUD SYNC INDICATOR (FIXED) */}
           <div className="flex items-center gap-1.5 mr-2 bg-[#111] px-2.5 py-1 rounded-md border border-zinc-800 text-[11px] font-mono hidden sm:flex">
             {syncStatus === "initial" || syncStatus === "connecting" || syncStatus === "reconnecting" ? (
               <>
@@ -228,13 +240,11 @@ export default function Editor() {
               </>
             ) : isSyncing ? (
               <>
-                {/* 🟡 Jab Type Karoge tab ye dikhega */}
                 <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-spin"></div>
                 <span className="text-yellow-400">Syncing...</span>
               </>
             ) : (
               <>
-                {/* 🟢 Type rukne ke baad wapas ye dikhega */}
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                 <span className="text-emerald-400">Saved to Cloud</span>
               </>
