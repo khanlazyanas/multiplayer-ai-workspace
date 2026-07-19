@@ -16,8 +16,6 @@ import { DocumentHeader } from "./DocumentHeader";
 
 import SlashCommands from './slashExtension';
 import slashSuggestion from './slashSuggestion';
-
-// 🔥 IMPORT ADDED FOR MARKDOWN PARSING
 import { marked } from "marked";
 
 export default function Editor() {
@@ -92,10 +90,8 @@ export default function Editor() {
               const text = await res.text();
               if (!res.ok) throw new Error(text); 
               
-              // 🔥 1. Markdown raw text ko properly HTML mein parse karo
               const htmlContent = await marked.parse(text);
               
-              // 🔥 2. Premium Professional Blockquote design banaya
               const formattedResponse = `
                 <blockquote style="border-left: 3px solid #8b5cf6; padding-left: 1rem; margin-top: 1.5rem; margin-bottom: 1.5rem; background: rgba(139, 92, 246, 0.05); padding: 1rem; border-radius: 0.5rem;">
                   <p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>
@@ -104,16 +100,13 @@ export default function Editor() {
                 <p></p>
               `;
 
-              // 🔥 3. Tiptap ko properly HTML insert karne ka command diya
               if (editor) {
                 editor.commands.insertContentAt(view.state.selection.to, formattedResponse);
               }
             })
             .catch((err) => {
               console.error(err);
-              toast.error("Error generating AI response!", {
-                style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
-              });
+              toast.error("Error generating AI response!");
             })
             .finally(() => {
               setIsLoading(false);
@@ -149,24 +142,18 @@ export default function Editor() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success("TXT exported successfully!", {
-      style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
-    });
+    toast.success("TXT exported successfully!");
   };
 
-  // 🔥 PDF GENERATOR FINAL FIX (No blank pages)
   const exportDocumentPDF = async () => {
     if (!editor) return;
 
-    const toastId = toast.loading("Preparing PDF...", { 
-      style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } 
-    });
+    const toastId = toast.loading("Preparing PDF...");
 
     try {
       const html2pdfModule = await import('html2pdf.js');
       const html2pdf = html2pdfModule.default || html2pdfModule;
       
-      // Original element ko hi target karenge
       const element = document.querySelector('.ProseMirror') as HTMLElement; 
       
       if (!element) {
@@ -181,20 +168,16 @@ export default function Editor() {
           scale: 2, 
           useCORS: true, 
           logging: false,
-          // 🔥 Asli magic yahan hai!
           onclone: (clonedDoc: any) => {
-            // 1. Crash rokne ke liye Tailwind CSS hatao
             const styles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
             styles.forEach((styleTag: any) => styleTag.remove());
 
-            // 2. Blank page rokne ke liye Clone par forcibly Black text & White bg lagao
             const clonedEditor = clonedDoc.querySelector('.ProseMirror');
             if (clonedEditor) {
               clonedEditor.style.backgroundColor = '#ffffff';
               clonedEditor.style.color = '#000000';
               clonedEditor.style.padding = '20px';
               
-              // Andar ke har ek element ka text black karo taaki white-on-white na ho
               const allElements = clonedEditor.querySelectorAll('*');
               allElements.forEach((el: any) => {
                 el.style.color = '#000000';
@@ -206,26 +189,17 @@ export default function Editor() {
       };
 
       await (html2pdf as any)().set(opt).from(element).save();
-      
-      toast.success("PDF exported successfully!", { 
-        id: toastId,
-        style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } 
-      });
+      toast.success("PDF exported successfully!", { id: toastId });
 
     } catch (err: any) {
       console.error("PDF Export Error:", err);
-      toast.error(`Error: ${err.message || "Failed to generate"}`, { 
-        id: toastId,
-        style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' } 
-      });
+      toast.error(`Error: ${err.message || "Failed to generate"}`, { id: toastId });
     }
   };
 
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    toast.success("Invite link copied to clipboard!", {
-      style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
-    });
+    toast.success("Invite link copied to clipboard!");
   };
 
   if (!editor) {
@@ -237,29 +211,29 @@ export default function Editor() {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0A0A0A] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
+    <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
       {isLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-300">
-          <div className="bg-zinc-900 text-violet-400 px-6 py-3 rounded-full text-sm md:text-base font-semibold flex items-center shadow-[0_0_30px_rgba(139,92,246,0.2)] border border-violet-500/30 animate-pulse">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md transition-all duration-300">
+          <div className="bg-zinc-900/90 text-violet-400 px-6 py-3 rounded-full text-sm md:text-base font-semibold flex items-center shadow-[0_0_30px_rgba(139,92,246,0.15)] border border-violet-500/20 animate-pulse">
             <span className="mr-3 text-xl">✨</span> AI is analyzing document...
           </div>
         </div>
       )}
 
-      {/* Mac style header */}
-      <div className="bg-zinc-900/80 backdrop-blur-md px-4 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0 overflow-x-auto">
-        <div className="flex space-x-2.5 min-w-fit pr-4">
-          <div className="w-3 h-3 rounded-full bg-red-500/80 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
-          <div className="w-3 h-3 rounded-full bg-yellow-500/80 shadow-[0_0_5px_rgba(234,179,8,0.5)]"></div>
-          <div className="w-3 h-3 rounded-full bg-green-500/80 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
-        </div>
+      {/* 🔥 PREMIUM GLASSMORPHISM HEADER (No Mac Dots) */}
+      <div className="bg-zinc-900/60 backdrop-blur-xl px-5 py-3.5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 overflow-x-auto z-20">
         
-        <DocumentTitle />
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex p-1.5 bg-zinc-800/50 rounded-md border border-zinc-700/50">
+             <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <DocumentTitle />
+        </div>
         
         <div className="flex items-center gap-2 min-w-fit">
           
-          <div className="flex items-center gap-1.5 mr-2 bg-[#111] px-2.5 py-1 rounded-md border border-zinc-800 text-[11px] font-mono hidden sm:flex">
+          <div className="flex items-center gap-2 mr-3 bg-black/40 px-3 py-1.5 rounded-full border border-zinc-800/80 text-[11px] font-mono hidden sm:flex shadow-inner">
             {syncStatus === "initial" || syncStatus === "connecting" || syncStatus === "reconnecting" ? (
               <>
                 <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
@@ -278,23 +252,26 @@ export default function Editor() {
             ) : (
               <>
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                <span className="text-emerald-400">Saved to Cloud</span>
+                <span className="text-emerald-400">Saved</span>
               </>
             )}
           </div>
 
           <ActiveUsers />
 
+          <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
+
+          {/* Unified Action Buttons */}
           <button 
             onClick={copyLink}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 rounded-md shadow-lg transition-all"
+            className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95"
           >
             Share
           </button>
 
           <button 
             onClick={exportDocumentPDF}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 px-3 py-1.5 rounded-md border border-red-500/30 transition-all"
+            className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white"
             title="Download as PDF"
           >
             PDF
@@ -302,7 +279,7 @@ export default function Editor() {
 
           <button 
             onClick={exportDocumentTXT}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700 transition-all"
+            className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white"
             title="Download as plain text"
           >
             TXT

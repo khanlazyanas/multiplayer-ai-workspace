@@ -1,6 +1,5 @@
 "use client";
 
-// 🔥 FIX: Sirf Editor import kiya hai. BubbleMenu ko poori tarah se hata diya gaya hai!
 import { Editor } from "@tiptap/react";
 
 export const Toolbar = ({ editor }: { editor: Editor }) => {
@@ -9,52 +8,57 @@ export const Toolbar = ({ editor }: { editor: Editor }) => {
   }
 
   return (
-    // Google Docs style Sticky Toolbar
-    <div className="flex flex-wrap items-center gap-2 bg-slate-900/80 backdrop-blur-md border border-slate-700 shadow-lg rounded-xl p-2 mb-6 sticky top-2 z-50">
+    // 🔥 PREMIUM FLOATING PILL TOOLBAR
+    <div className="flex flex-wrap items-center gap-1 bg-[#18181b]/90 backdrop-blur-xl border border-zinc-700/50 shadow-[0_8px_30px_rgba(0,0,0,0.5)] rounded-full px-2 py-1.5 mb-8 w-fit mx-auto sticky top-4 z-50">
+      
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+        className={`w-8 h-8 flex items-center justify-center text-sm font-bold rounded-full transition-all ${
           editor.isActive('bold') 
-            ? 'bg-sky-500 text-white shadow-md' 
-            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            ? 'bg-zinc-700 text-white shadow-inner' 
+            : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
         }`}
+        title="Bold"
       >
-        Bold
+        B
       </button>
       
       <button
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+        className={`w-8 h-8 flex items-center justify-center text-sm font-serif italic rounded-full transition-all ${
           editor.isActive('italic') 
-            ? 'bg-sky-500 text-white shadow-md' 
-            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            ? 'bg-zinc-700 text-white shadow-inner' 
+            : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
         }`}
+        title="Italic"
       >
-        Italic
+        I
       </button>
 
       <button
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+        className={`w-8 h-8 flex items-center justify-center text-sm line-through rounded-full transition-all ${
           editor.isActive('strike') 
-            ? 'bg-sky-500 text-white shadow-md' 
-            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            ? 'bg-zinc-700 text-white shadow-inner' 
+            : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
         }`}
+        title="Strike"
       >
-        Strike
+        S
       </button>
 
-      <div className="w-px h-6 bg-slate-700 mx-1"></div> {/* Divider */}
+      <div className="w-px h-5 bg-zinc-700/50 mx-1"></div> {/* Divider */}
 
       <button
         onClick={() => editor.chain().focus().toggleCode().run()}
-        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+        className={`px-3 py-1.5 text-xs font-mono font-medium rounded-full transition-all flex items-center gap-1.5 ${
           editor.isActive('code') 
-            ? 'bg-emerald-500 text-white shadow-md' 
-            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            ? 'bg-violet-600/20 text-violet-400 border border-violet-500/30' 
+            : 'text-zinc-400 hover:bg-zinc-800 hover:text-white border border-transparent'
         }`}
       >
-        Code Block
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        Code
       </button>
     </div>
   );

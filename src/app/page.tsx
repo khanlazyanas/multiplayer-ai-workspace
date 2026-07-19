@@ -63,7 +63,7 @@ export default function Home() {
 
   if (!isLoaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-violet-500 font-medium">
+      <div className="flex min-h-screen items-center justify-center bg-[#09090b] text-violet-500 font-medium">
         <div className="flex flex-col items-center gap-5">
           <div className="w-8 h-8 border-2 border-zinc-800 border-t-violet-500 rounded-full animate-spin"></div>
           <p className="tracking-[0.2em] text-xs text-zinc-500 uppercase font-mono">Initializing System</p>
@@ -73,14 +73,14 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-zinc-300 flex flex-col font-sans selection:bg-violet-500/30 selection:text-violet-200 relative overflow-hidden">
+    <div className="min-h-screen bg-[#09090b] text-zinc-300 flex flex-col font-sans selection:bg-violet-500/30 selection:text-violet-200 relative overflow-hidden">
       
       {/* Stealthy AI Ambient Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-violet-900/10 blur-[150px] rounded-full pointer-events-none z-0"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-fuchsia-900/10 blur-[150px] rounded-full pointer-events-none z-0"></div>
 
       {/* MINIMALIST HEADER */}
-      <header className="flex justify-between items-center px-8 py-5 border-b border-zinc-800/80 bg-black/60 backdrop-blur-2xl sticky top-0 z-50">
+      <header className="flex justify-between items-center px-8 py-5 border-b border-zinc-800/60 bg-[#09090b]/80 backdrop-blur-2xl sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <div className="w-9 h-9 bg-zinc-900 rounded-lg flex items-center justify-center border border-zinc-800 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
             <span className="text-zinc-100 text-lg font-bold">W</span>
@@ -150,23 +150,24 @@ export default function Home() {
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-36 bg-zinc-900/50 rounded-xl border border-zinc-800/50 animate-pulse"></div>
+                  <div key={i} className="h-36 bg-zinc-900/40 rounded-xl border border-zinc-800/40 animate-pulse"></div>
                 ))}
               </div>
             ) : workspaces.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {workspaces.map((ws) => (
                   <a href={`/documents/${ws.roomId}`} key={ws._id} className="group relative block">
-                    <div className="h-full bg-[#0A0A0A] border border-zinc-800 p-5 rounded-xl hover:border-violet-500/30 hover:bg-[#111] transition-all duration-300">
+                    {/* 🔥 PREMIUM CARD DESIGN */}
+                    <div className="h-full bg-[#121214] border border-zinc-800/60 p-5 rounded-2xl hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(139,92,246,0.1)] hover:border-violet-500/40 transition-all duration-300">
                       
                       <div className="flex items-start justify-between mb-5">
-                        <div className="w-8 h-8 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-violet-400 transition-colors">
+                        <div className="w-9 h-9 rounded-lg bg-[#18181b] border border-zinc-700/50 flex items-center justify-center text-zinc-400 group-hover:text-violet-400 group-hover:bg-violet-500/10 transition-colors">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         </div>
                         
                         <button 
                           onClick={(e) => deleteWorkspace(e, ws.roomId)}
-                          className="text-zinc-600 hover:text-red-400 hover:bg-red-400/10 p-1.5 rounded-md transition-colors opacity-0 group-hover:opacity-100 z-20"
+                          className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-md transition-colors opacity-0 group-hover:opacity-100 z-20"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
@@ -176,8 +177,8 @@ export default function Home() {
                         <h4 className="font-medium text-base text-zinc-200 mb-2 truncate group-hover:text-violet-300 transition-colors">
                           {ws.title}
                         </h4>
-                        <div className="flex items-center justify-between text-[11px] text-zinc-600 font-mono">
-                          <span>{ws.roomId.slice(0,8)}</span>
+                        <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono">
+                          <span>ID: {ws.roomId.slice(0,8)}</span>
                           <span>{new Date(ws.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                         </div>
                       </div>
