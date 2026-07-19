@@ -56,7 +56,11 @@ export default function Editor() {
         class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror",
       },
       handleKeyDown: (view, event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
+        // 🔥 NAYA LOGIC: Ctrl + Enter se AI direct chalega, normal Enter se new line banegi!
+        const isCtrlEnter = event.key === 'Enter' && (event.ctrlKey || event.metaKey);
+        const isNormalEnter = event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey;
+
+        if (isCtrlEnter || isNormalEnter) {
           const state = view.state;
           const { $from } = state.selection;
           
@@ -71,7 +75,12 @@ export default function Editor() {
             }
           });
 
-          if (hasAI) {
+          // Agar user ne Ctrl + Enter dabaya hai, toh bina @AI ke trigger hoga
+          if (isCtrlEnter) {
+            hasAI = true;
+          }
+
+          if (hasAI && userInstruction.trim().length > 0) {
             event.preventDefault(); 
             
             const fullContext = state.doc.textBetween(0, state.doc.content.size, '\n');
@@ -90,15 +99,13 @@ export default function Editor() {
               const text = await res.text();
               if (!res.ok) throw new Error(text); 
               
-              // 🔥 FIX 1: Clean parsing without extra new lines causing the huge gap
               const rawHTML = await marked.parse(text.trim());
-              const cleanHTML = rawHTML.replace(/\n/g, ''); 
               
-              // 🔥 FIX 2: Removed inline styles that caused Tiptap schema loops (Yellow Syncing Bug)
+              // 🔥 FIX: Clean HTML blockquote (Design controlled via global style below to avoid gaps)
               const formattedResponse = `
                 <blockquote>
                   <p><strong>🤖 AI Assistant:</strong></p>
-                  ${cleanHTML}
+                  ${rawHTML}
                 </blockquote>
                 <p></p>
               `;
@@ -216,6 +223,28 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
+      {/* 🔥 MAGIC FIX: Ye style tag Tiptap ke andar ke faltu gaps aur margins ko remove karke professional design lagayega */}
+      <style>{`
+        .ProseMirror blockquote {
+          border-left: 3px solid #8b5cf6;
+          padding-left: 1rem;
+          margin: 1.5rem 0;
+          background: rgba(139, 92, 246, 0.08);
+          padding: 1rem;
+          border-radius: 0.5rem;
+        }
+        .ProseMirror blockquote p {
+          margin-bottom: 0.5rem;
+          line-height: 1.6;
+        }
+        .ProseMirror blockquote p:last-child {
+          margin-bottom: 0;
+        }
+        .ProseMirror p {
+          margin-bottom: 0.75rem;
+        }
+      `}</style>
+
       {isLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md transition-all duration-300">
           <div className="bg-zinc-900/90 text-violet-400 px-6 py-3 rounded-full text-sm md:text-base font-semibold flex items-center shadow-[0_0_30px_rgba(139,92,246,0.15)] border border-violet-500/20 animate-pulse">

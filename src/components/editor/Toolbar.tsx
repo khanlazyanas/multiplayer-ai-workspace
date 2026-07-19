@@ -1,5 +1,6 @@
 "use client";
 
+// 🔥 FIX: Sirf Editor import kiya hai. BubbleMenu ko poori tarah se hata diya gaya hai!
 import { Editor } from "@tiptap/react";
 
 export const Toolbar = ({ editor }: { editor: Editor }) => {
@@ -8,57 +9,52 @@ export const Toolbar = ({ editor }: { editor: Editor }) => {
   }
 
   return (
-    // 🔥 FIX: Removed 'sticky top-4 z-50' so it doesn't overlap text anymore!
-    <div className="flex flex-wrap items-center gap-1 bg-[#18181b] border border-zinc-700/50 shadow-sm rounded-full px-2 py-1.5 mb-6 w-fit">
-      
+    // Google Docs style Sticky Toolbar
+    <div className="flex flex-wrap items-center gap-2 bg-slate-900/80 backdrop-blur-md border border-slate-700 shadow-lg rounded-xl p-2 mb-6 sticky top-2 z-50">
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`w-8 h-8 flex items-center justify-center text-sm font-bold rounded-full transition-all ${
+        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
           editor.isActive('bold') 
-            ? 'bg-zinc-700 text-white shadow-inner' 
-            : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
+            ? 'bg-sky-500 text-white shadow-md' 
+            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
         }`}
-        title="Bold"
       >
-        B
+        Bold
       </button>
       
       <button
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`w-8 h-8 flex items-center justify-center text-sm font-serif italic rounded-full transition-all ${
+        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
           editor.isActive('italic') 
-            ? 'bg-zinc-700 text-white shadow-inner' 
-            : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
+            ? 'bg-sky-500 text-white shadow-md' 
+            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
         }`}
-        title="Italic"
       >
-        I
+        Italic
       </button>
 
       <button
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={`w-8 h-8 flex items-center justify-center text-sm line-through rounded-full transition-all ${
+        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
           editor.isActive('strike') 
-            ? 'bg-zinc-700 text-white shadow-inner' 
-            : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
+            ? 'bg-sky-500 text-white shadow-md' 
+            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
         }`}
-        title="Strike"
       >
-        S
+        Strike
       </button>
 
-      <div className="w-px h-5 bg-zinc-700/50 mx-1"></div> {/* Divider */}
+      <div className="w-px h-6 bg-slate-700 mx-1"></div> {/* Divider */}
 
       <button
         onClick={() => editor.chain().focus().toggleCode().run()}
-        className={`px-3 py-1.5 text-xs font-mono font-medium rounded-full transition-all flex items-center gap-1.5 ${
+        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
           editor.isActive('code') 
-            ? 'bg-violet-600/20 text-violet-400 border border-violet-500/30' 
-            : 'text-zinc-400 hover:bg-zinc-800 hover:text-white border border-transparent'
+            ? 'bg-emerald-500 text-white shadow-md' 
+            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
         }`}
       >
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-        Code
+        Code Block
       </button>
     </div>
   );
