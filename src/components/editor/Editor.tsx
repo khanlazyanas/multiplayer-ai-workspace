@@ -75,7 +75,7 @@ export default function Editor() {
             }
           });
 
-          // Ctrl+Enter direct AI trigger karega
+          // Ctrl+Enter se direct AI trigger
           if (isCtrlEnter) {
             hasAI = true;
           }
@@ -99,18 +99,17 @@ export default function Editor() {
               const text = await res.text();
               if (!res.ok) throw new Error(text); 
               
-              // 🔥 1. Extreme Trim to remove any hidden API blank lines
-              const cleanText = text.replace(/^[\s\n]+|[\s\n]+$/g, '');
-              const rawHTML = await marked.parse(cleanText);
+              const rawHTML = await marked.parse(text.trim());
               
-              // 🔥 2. The Bulletproof HTML Payload 
-              // Notice the <p><br></p> at the very end. This forces a visible empty line outside!
+              // 🔥 THE FINAL, FAIL-PROOF FIX:
+              // No Blockquotes. Sirf Horizontal Lines (<hr>) use kar rahe hain taaki fassne ka koi chance hi na ho!
               const formattedResponse = `
-                <blockquote>
-                  <p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>
-                  ${rawHTML}
-                </blockquote>
-                <p><br></p>
+                <p></p>
+                <hr>
+                <p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>
+                ${rawHTML}
+                <hr>
+                <p></p>
               `;
 
               if (editor) {
@@ -229,28 +228,11 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
-      {/* 🔥 THE 200% FIX: CSS Flexbox to murder all margins and gaps */}
+      {/* Basic Global CSS removed to prevent layout breaks! */}
       <style>{`
-        .ProseMirror blockquote {
-          border-left: 3px solid #8b5cf6;
-          margin: 1.5rem 0;
-          background: rgba(139, 92, 246, 0.08);
-          padding: 1.25rem;
-          border-radius: 0.5rem;
-          display: flex; 
-          flex-direction: column;
-          gap: 0.5rem; /* Exact 8px gap between header and text, NO MORE! */
-        }
-        .ProseMirror blockquote p {
-          margin: 0 !important;
-          padding: 0 !important;
-          line-height: 1.6;
-        }
-        /* Add a sleek separator line under the AI Assistant text */
-        .ProseMirror blockquote p:first-child {
-          border-bottom: 1px solid rgba(139, 92, 246, 0.2);
-          padding-bottom: 0.5rem !important;
-          margin-bottom: 0.25rem !important;
+        .ProseMirror hr {
+          border-color: rgba(139, 92, 246, 0.3);
+          margin: 1rem 0;
         }
       `}</style>
 
