@@ -97,14 +97,13 @@ export default function Editor() {
               const text = await res.text();
               if (!res.ok) throw new Error(text); 
               
+              // 🔥 FIX: Ab hum enters (\n) ko delete nahi kar rahe! Taaki code blocks aur lists intact rahein.
               const cleanText = text.trim();
-              const rawHTML = await marked.parse(cleanText);
-              const safeHTML = rawHTML.replace(/\n/g, ''); 
+              const rawHTML = await marked.parse(cleanText); 
 
-              const finalContent = `<blockquote><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${safeHTML}</blockquote><p></p>`;
+              const finalContent = `<blockquote><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${rawHTML}</blockquote><p></p>`;
 
               if (editor) {
-                // 🔥 SAFE INSERT: Koi clearNodes nahi
                 editor.commands.insertContent(finalContent);
               }
             })
@@ -134,7 +133,6 @@ export default function Editor() {
     return () => clearTimeout(timeout);
   }, [isSyncing]);
 
-  // 🔥 MOBILE KE LIYE FIX KIYA GAYA BUTTON LOGIC
   const handleAskAI = () => {
     if (!editor) return;
     const state = editor.state;
@@ -162,13 +160,12 @@ export default function Editor() {
       const text = await res.text();
       if (!res.ok) throw new Error(text); 
       
+      // 🔥 FIX: Yahan se bhi replace(/\n/g, '') hata diya gaya hai!
       const cleanText = text.trim();
-      const rawHTML = await marked.parse(cleanText);
-      const safeHTML = rawHTML.replace(/\n/g, ''); 
+      const rawHTML = await marked.parse(cleanText); 
 
-      const finalContent = `<blockquote><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${safeHTML}</blockquote><p></p>`;
+      const finalContent = `<blockquote><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${rawHTML}</blockquote><p></p>`;
 
-      // 🔥 RangeError FIX: Yahan se bhi clearNodes() ko hamesha ke liye nikaal diya hai! Sirf safe insert!
       editor.commands.insertContent(finalContent);
     })
     .catch((err) => {
@@ -245,7 +242,7 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
-      {/* Clean Global CSS for perfect Blockquote rendering */}
+      {/* 🔥 PREMIUM CSS FOR CODE BLOCKS, LISTS & BLOCKQUOTES */}
       <style>{`
         .ProseMirror blockquote {
           border-left: 3px solid #8b5cf6;
@@ -261,8 +258,34 @@ export default function Editor() {
         .ProseMirror blockquote p:last-child {
           margin-bottom: 0;
         }
-        .ProseMirror p {
+        /* ✨ IDE Style Code Block */
+        .ProseMirror pre {
+          background: #18181b;
+          color: #e4e4e7;
+          padding: 1rem;
+          border-radius: 0.5rem;
+          border: 1px solid rgba(255,255,255,0.1);
+          font-family: monospace;
+          margin: 1rem 0;
+          overflow-x: auto;
+        }
+        .ProseMirror code {
+          font-family: monospace;
+          background: rgba(255,255,255,0.1);
+          padding: 0.2rem 0.4rem;
+          border-radius: 0.25rem;
+        }
+        .ProseMirror pre code {
+          background: transparent;
+          padding: 0;
+        }
+        /* List Styling */
+        .ProseMirror ul, .ProseMirror ol {
+          padding-left: 1.5rem;
           margin-bottom: 0.5rem;
+        }
+        .ProseMirror li {
+          margin-bottom: 0.25rem;
         }
       `}</style>
 
