@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 export const CreateWorkspaceButton = () => {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCreateWorkspace = async () => {
@@ -13,7 +11,6 @@ export const CreateWorkspaceButton = () => {
     toast.loading("Setting up workspace...", { id: "create-workspace" });
 
     try {
-      // Backend API ko call kar rahe hain jo MongoDB me room banayegi
       const response = await fetch("/api/workspaces", {
         method: "POST",
       });
@@ -25,8 +22,8 @@ export const CreateWorkspaceButton = () => {
       const workspace = await response.json();
       toast.success("Workspace created", { id: "create-workspace" });
 
-      // Naye generate hue roomId par redirect kar do
-      router.push(`/documents/${workspace.roomId}`);
+      // 🔥 FIX: Next.js router ki jagah window.location lagaya taaki memory clear ho jaye aur naya room khali mile
+      window.location.href = `/documents/${workspace.roomId}`;
       
     } catch (error) {
       console.error(error);

@@ -156,7 +156,7 @@ export default function Home() {
             ) : workspaces.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {workspaces.map((ws) => (
-                  <Link href={`/documents/${ws.roomId}`} key={ws._id} className="group relative block">
+                  <a href={`/documents/${ws.roomId}`} key={ws._id} className="group relative block">
                     <div className="h-full bg-[#0A0A0A] border border-zinc-800 p-5 rounded-xl hover:border-violet-500/30 hover:bg-[#111] transition-all duration-300">
                       
                       <div className="flex items-start justify-between mb-5">
@@ -182,7 +182,7 @@ export default function Home() {
                         </div>
                       </div>
                     </div>
-                  </Link>
+                  </a>
                 ))}
               </div>
             ) : (
