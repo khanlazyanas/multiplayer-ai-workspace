@@ -56,7 +56,7 @@ export default function Editor() {
         class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror",
       },
       handleKeyDown: (view, event) => {
-        // 🔥 NAYA LOGIC: Ctrl + Enter se AI direct chalega, normal Enter se new line banegi!
+        // 🔥 MAGIC FIX: Ctrl+Enter (ya Cmd+Enter) dabane par AI chalega
         const isCtrlEnter = event.key === 'Enter' && (event.ctrlKey || event.metaKey);
         const isNormalEnter = event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey;
 
@@ -75,7 +75,7 @@ export default function Editor() {
             }
           });
 
-          // Agar user ne Ctrl + Enter dabaya hai, toh bina @AI ke trigger hoga
+          // Ctrl+Enter direct AI ko bula lega bina @AI likhe
           if (isCtrlEnter) {
             hasAI = true;
           }
@@ -100,18 +100,19 @@ export default function Editor() {
               if (!res.ok) throw new Error(text); 
               
               const rawHTML = await marked.parse(text.trim());
+              const compactHTML = rawHTML.replace(/\n/g, ''); 
               
-              // 🔥 FIX: Clean HTML blockquote (Design controlled via global style below to avoid gaps)
               const formattedResponse = `
                 <blockquote>
-                  <p><strong>🤖 AI Assistant:</strong></p>
-                  ${rawHTML}
+                  <p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>
+                  ${compactHTML}
                 </blockquote>
                 <p></p>
               `;
 
               if (editor) {
-                editor.commands.insertContentAt(view.state.selection.to, formattedResponse);
+                // 🔥 THE FIX: Ye command AI ka jawab likh kar cursor ko automatically dabbe ke bahar nayi khali line par le aayegi!
+                editor.chain().focus().insertContent(formattedResponse).run();
               }
             })
             .catch((err) => {
@@ -223,7 +224,7 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
-      {/* 🔥 MAGIC FIX: Ye style tag Tiptap ke andar ke faltu gaps aur margins ko remove karke professional design lagayega */}
+      {/* Global Style for Blockquotes */}
       <style>{`
         .ProseMirror blockquote {
           border-left: 3px solid #8b5cf6;
@@ -240,9 +241,6 @@ export default function Editor() {
         .ProseMirror blockquote p:last-child {
           margin-bottom: 0;
         }
-        .ProseMirror p {
-          margin-bottom: 0.75rem;
-        }
       `}</style>
 
       {isLoading && (
@@ -253,9 +251,8 @@ export default function Editor() {
         </div>
       )}
 
-      {/* PREMIUM GLASSMORPHISM HEADER */}
+      {/* Header */}
       <div className="bg-zinc-900/60 backdrop-blur-xl px-5 py-3.5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 overflow-x-auto z-20">
-        
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex p-1.5 bg-zinc-800/50 rounded-md border border-zinc-700/50">
              <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -264,7 +261,6 @@ export default function Editor() {
         </div>
         
         <div className="flex items-center gap-2 min-w-fit">
-          
           <div className="flex items-center gap-2 mr-3 bg-black/40 px-3 py-1.5 rounded-full border border-zinc-800/80 text-[11px] font-mono hidden sm:flex shadow-inner">
             {syncStatus === "initial" || syncStatus === "connecting" || syncStatus === "reconnecting" ? (
               <>
@@ -288,33 +284,11 @@ export default function Editor() {
               </>
             )}
           </div>
-
           <ActiveUsers />
-
           <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
-
-          <button 
-            onClick={copyLink}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95"
-          >
-            Share
-          </button>
-
-          <button 
-            onClick={exportDocumentPDF}
-            className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white"
-            title="Download as PDF"
-          >
-            PDF
-          </button>
-
-          <button 
-            onClick={exportDocumentTXT}
-            className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white"
-            title="Download as plain text"
-          >
-            TXT
-          </button>
+          <button onClick={copyLink} className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95">Share</button>
+          <button onClick={exportDocumentPDF} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">PDF</button>
+          <button onClick={exportDocumentTXT} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">TXT</button>
         </div>
       </div>
       
