@@ -2,13 +2,13 @@
 
 import { Editor } from "@tiptap/react";
 
-export const Toolbar = ({ editor }: { editor: Editor }) => {
+// 🔥 Naya prop 'onAskAI' add kiya gaya hai
+export const Toolbar = ({ editor, onAskAI }: { editor: Editor, onAskAI?: () => void }) => {
   if (!editor) {
     return null;
   }
 
   return (
-    // 🔥 Pura design sleek pill jaisa banaya hai
     <div className="flex flex-wrap items-center gap-1 bg-[#18181b] border border-zinc-700/50 shadow-sm rounded-full px-2 py-1.5 mb-6 w-fit">
       
       <button
@@ -47,7 +47,7 @@ export const Toolbar = ({ editor }: { editor: Editor }) => {
         S
       </button>
 
-      <div className="w-px h-5 bg-zinc-700/50 mx-1"></div>
+      <div className="w-px h-5 bg-zinc-700/50 mx-1"></div> {/* Divider */}
 
       <button
         onClick={() => editor.chain().focus().toggleCode().run()}
@@ -60,6 +60,20 @@ export const Toolbar = ({ editor }: { editor: Editor }) => {
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
         Code
       </button>
+
+      {/* 🔥 MOBILE FRIENDLY AI BUTTON 🔥 */}
+      {onAskAI && (
+        <>
+          <div className="w-px h-5 bg-zinc-700/50 mx-1"></div>
+          <button
+            onClick={onAskAI}
+            className="px-3 py-1.5 text-xs font-bold rounded-full transition-all flex items-center gap-1.5 bg-violet-600/20 text-violet-400 hover:bg-violet-600/40 border border-violet-500/30 shadow-[0_0_10px_rgba(139,92,246,0.15)]"
+            title="Ask AI (Ctrl + Enter on Desktop)"
+          >
+            ✨ Ask AI
+          </button>
+        </>
+      )}
     </div>
   );
 };

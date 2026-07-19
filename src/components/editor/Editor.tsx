@@ -56,7 +56,6 @@ export default function Editor() {
         class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror",
       },
       handleKeyDown: (view, event) => {
-        // 🔥 SHORTCUT: Ctrl+Enter (ya Cmd+Enter) dabane par AI chalega
         const isCtrlEnter = event.key === 'Enter' && (event.ctrlKey || event.metaKey);
         const isNormalEnter = event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey;
 
@@ -98,15 +97,14 @@ export default function Editor() {
               const text = await res.text();
               if (!res.ok) throw new Error(text); 
               
-              const rawHTML = await marked.parse(text.trim());
-              const safeHTML = rawHTML.replace(/\n/g, ''); // Hidden enters saaf karne ke liye
-              
-              // 🔥 FIX: Single string jisme Blockquote hai aur uske TURENT BAAD ek <p></p> hai taaki cursor bahar nikle.
-              const finalContent = `<blockquote><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${safeHTML}</blockquote><p></p>`;
+              const cleanText = text.trim();
+              const rawHTML = await marked.parse(cleanText);
+              const safeHTML = rawHTML.replace(/\n/g, ''); 
+
+              const finalContent = `<p><br></p><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${safeHTML}<p><br></p>`;
 
               if (editor) {
-                // 🔥 RANGE ERROR FIX: .clearNodes() aur .chain() hata diya. Direct insert karo. Ye kabhi crash nahi hoga!
-                editor.commands.insertContent(finalContent);
+                editor.chain().focus().insertContent(finalContent).clearNodes().run();
               }
             })
             .catch((err) => {
@@ -135,6 +133,51 @@ export default function Editor() {
     return () => clearTimeout(timeout);
   }, [isSyncing]);
 
+  // 🔥 MOBILE KE LIYE NAYA BUTTON LOGIC
+  const handleAskAI = () => {
+    if (!editor) return;
+    const state = editor.state;
+    const { $from } = state.selection;
+    let userInstruction = $from.parent.textContent.replace(/@AI/g, '').trim();
+
+    if (!userInstruction) {
+      toast.error("Please write something for AI first!", {
+        style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
+      });
+      return;
+    }
+
+    const fullContext = state.doc.textBetween(0, state.doc.content.size, '\n');
+    const smartPrompt = `Here is the current document content:\n\n${fullContext}\n\nUser Request: ${userInstruction}`;
+
+    setIsLoading(true);
+    
+    fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: smartPrompt })
+    })
+    .then(async (res) => {
+      const text = await res.text();
+      if (!res.ok) throw new Error(text); 
+      
+      const cleanText = text.trim();
+      const rawHTML = await marked.parse(cleanText);
+      const safeHTML = rawHTML.replace(/\n/g, ''); 
+
+      const finalContent = `<p><br></p><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${safeHTML}<p><br></p>`;
+
+      editor.chain().focus().insertContent(finalContent).clearNodes().run();
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error("Error generating AI response!");
+    })
+    .finally(() => {
+      setIsLoading(false);
+    });
+  };
+
   const exportDocumentTXT = () => {
     if (!editor) return;
     const content = editor.getText();
@@ -152,18 +195,12 @@ export default function Editor() {
 
   const exportDocumentPDF = async () => {
     if (!editor) return;
-
     const toastId = toast.loading("Preparing PDF...");
-
     try {
       const html2pdfModule = await import('html2pdf.js');
       const html2pdf = html2pdfModule.default || html2pdfModule;
-      
       const element = document.querySelector('.ProseMirror') as HTMLElement; 
-      
-      if (!element) {
-        throw new Error("Document content not found");
-      }
+      if (!element) throw new Error("Document content not found");
 
       const opt = {
         margin: [0.5, 0.5, 0.5, 0.5],
@@ -176,26 +213,20 @@ export default function Editor() {
           onclone: (clonedDoc: any) => {
             const styles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
             styles.forEach((styleTag: any) => styleTag.remove());
-
             const clonedEditor = clonedDoc.querySelector('.ProseMirror');
             if (clonedEditor) {
               clonedEditor.style.backgroundColor = '#ffffff';
               clonedEditor.style.color = '#000000';
               clonedEditor.style.padding = '20px';
-              
               const allElements = clonedEditor.querySelectorAll('*');
-              allElements.forEach((el: any) => {
-                el.style.color = '#000000';
-              });
+              allElements.forEach((el: any) => el.style.color = '#000000');
             }
           }
         }, 
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
-
       await (html2pdf as any)().set(opt).from(element).save();
       toast.success("PDF exported successfully!", { id: toastId });
-
     } catch (err: any) {
       console.error("PDF Export Error:", err);
       toast.error(`Error: ${err.message || "Failed to generate"}`, { id: toastId });
@@ -207,38 +238,11 @@ export default function Editor() {
     toast.success("Invite link copied to clipboard!");
   };
 
-  if (!editor) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] text-zinc-500 font-medium animate-pulse">
-        Initializing Workspace Engine...
-      </div>
-    );
-  }
+  if (!editor) return <div className="flex items-center justify-center min-h-[60vh] text-zinc-500 font-medium animate-pulse">Initializing Workspace Engine...</div>;
 
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
-      {/* Clean Global CSS for perfect Blockquote rendering */}
-      <style>{`
-        .ProseMirror blockquote {
-          border-left: 3px solid #8b5cf6;
-          margin: 1.5rem 0;
-          background: rgba(139, 92, 246, 0.08);
-          padding: 1.25rem;
-          border-radius: 0.5rem;
-        }
-        .ProseMirror blockquote p {
-          margin-bottom: 0.5rem;
-          line-height: 1.6;
-        }
-        .ProseMirror blockquote p:last-child {
-          margin-bottom: 0;
-        }
-        .ProseMirror p {
-          margin-bottom: 0.5rem;
-        }
-      `}</style>
-
       {isLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md transition-all duration-300">
           <div className="bg-zinc-900/90 text-violet-400 px-6 py-3 rounded-full text-sm md:text-base font-semibold flex items-center shadow-[0_0_30px_rgba(139,92,246,0.15)] border border-violet-500/20 animate-pulse">
@@ -247,7 +251,6 @@ export default function Editor() {
         </div>
       )}
 
-      {/* Header */}
       <div className="bg-zinc-900/60 backdrop-blur-xl px-5 py-3.5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 overflow-x-auto z-20">
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex p-1.5 bg-zinc-800/50 rounded-md border border-zinc-700/50">
@@ -259,25 +262,13 @@ export default function Editor() {
         <div className="flex items-center gap-2 min-w-fit">
           <div className="flex items-center gap-2 mr-3 bg-black/40 px-3 py-1.5 rounded-full border border-zinc-800/80 text-[11px] font-mono hidden sm:flex shadow-inner">
             {syncStatus === "initial" || syncStatus === "connecting" || syncStatus === "reconnecting" ? (
-              <>
-                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
-                <span className="text-zinc-400">Connecting...</span>
-              </>
+              <><div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div><span className="text-zinc-400">Connecting...</span></>
             ) : syncStatus === "disconnected" ? (
-              <>
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                <span className="text-red-400">Offline</span>
-              </>
+              <><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div><span className="text-red-400">Offline</span></>
             ) : isSyncing ? (
-              <>
-                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-spin"></div>
-                <span className="text-yellow-400">Syncing...</span>
-              </>
+              <><div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-spin"></div><span className="text-yellow-400">Syncing...</span></>
             ) : (
-              <>
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                <span className="text-emerald-400">Saved</span>
-              </>
+              <><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div><span className="text-emerald-400">Saved</span></>
             )}
           </div>
           <ActiveUsers />
@@ -291,7 +282,8 @@ export default function Editor() {
       <div className="flex-1 overflow-y-auto w-full relative bg-transparent custom-scrollbar">
         <DocumentHeader />
         <div className="p-5 md:p-10 max-w-4xl mx-auto w-full">
-          <Toolbar editor={editor} />
+          {/* 🔥 Yahan Button Connect Ho Gaya! */}
+          <Toolbar editor={editor} onAskAI={handleAskAI} />
           <FloatingBubbleMenu editor={editor} />
           <EditorContent editor={editor} className="w-full h-full mt-2" />
         </div>
