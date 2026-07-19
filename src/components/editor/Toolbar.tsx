@@ -8,8 +8,8 @@ export const Toolbar = ({ editor }: { editor: Editor }) => {
   }
 
   return (
-    // 🔥 PREMIUM FLOATING PILL TOOLBAR
-    <div className="flex flex-wrap items-center gap-1 bg-[#18181b]/90 backdrop-blur-xl border border-zinc-700/50 shadow-[0_8px_30px_rgba(0,0,0,0.5)] rounded-full px-2 py-1.5 mb-8 w-fit mx-auto sticky top-4 z-50">
+    // 🔥 FIX: Removed 'sticky top-4 z-50' so it doesn't overlap text anymore!
+    <div className="flex flex-wrap items-center gap-1 bg-[#18181b] border border-zinc-700/50 shadow-sm rounded-full px-2 py-1.5 mb-6 w-fit">
       
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}

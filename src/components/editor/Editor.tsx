@@ -90,12 +90,15 @@ export default function Editor() {
               const text = await res.text();
               if (!res.ok) throw new Error(text); 
               
-              const htmlContent = await marked.parse(text);
+              // 🔥 FIX 1: Clean parsing without extra new lines causing the huge gap
+              const rawHTML = await marked.parse(text.trim());
+              const cleanHTML = rawHTML.replace(/\n/g, ''); 
               
+              // 🔥 FIX 2: Removed inline styles that caused Tiptap schema loops (Yellow Syncing Bug)
               const formattedResponse = `
-                <blockquote style="border-left: 3px solid #8b5cf6; padding-left: 1rem; margin-top: 1.5rem; margin-bottom: 1.5rem; background: rgba(139, 92, 246, 0.05); padding: 1rem; border-radius: 0.5rem;">
-                  <p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>
-                  ${htmlContent}
+                <blockquote>
+                  <p><strong>🤖 AI Assistant:</strong></p>
+                  ${cleanHTML}
                 </blockquote>
                 <p></p>
               `;
@@ -221,7 +224,7 @@ export default function Editor() {
         </div>
       )}
 
-      {/* 🔥 PREMIUM GLASSMORPHISM HEADER (No Mac Dots) */}
+      {/* PREMIUM GLASSMORPHISM HEADER */}
       <div className="bg-zinc-900/60 backdrop-blur-xl px-5 py-3.5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 overflow-x-auto z-20">
         
         <div className="flex items-center gap-3">
@@ -261,7 +264,6 @@ export default function Editor() {
 
           <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
 
-          {/* Unified Action Buttons */}
           <button 
             onClick={copyLink}
             className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95"
