@@ -101,10 +101,11 @@ export default function Editor() {
               const rawHTML = await marked.parse(cleanText);
               const safeHTML = rawHTML.replace(/\n/g, ''); 
 
-              const finalContent = `<p><br></p><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${safeHTML}<p><br></p>`;
+              const finalContent = `<blockquote><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${safeHTML}</blockquote><p></p>`;
 
               if (editor) {
-                editor.chain().focus().insertContent(finalContent).clearNodes().run();
+                // 🔥 SAFE INSERT: Koi clearNodes nahi
+                editor.commands.insertContent(finalContent);
               }
             })
             .catch((err) => {
@@ -133,7 +134,7 @@ export default function Editor() {
     return () => clearTimeout(timeout);
   }, [isSyncing]);
 
-  // 🔥 MOBILE KE LIYE NAYA BUTTON LOGIC
+  // 🔥 MOBILE KE LIYE FIX KIYA GAYA BUTTON LOGIC
   const handleAskAI = () => {
     if (!editor) return;
     const state = editor.state;
@@ -165,9 +166,10 @@ export default function Editor() {
       const rawHTML = await marked.parse(cleanText);
       const safeHTML = rawHTML.replace(/\n/g, ''); 
 
-      const finalContent = `<p><br></p><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${safeHTML}<p><br></p>`;
+      const finalContent = `<blockquote><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${safeHTML}</blockquote><p></p>`;
 
-      editor.chain().focus().insertContent(finalContent).clearNodes().run();
+      // 🔥 RangeError FIX: Yahan se bhi clearNodes() ko hamesha ke liye nikaal diya hai! Sirf safe insert!
+      editor.commands.insertContent(finalContent);
     })
     .catch((err) => {
       console.error(err);
@@ -243,6 +245,27 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
+      {/* Clean Global CSS for perfect Blockquote rendering */}
+      <style>{`
+        .ProseMirror blockquote {
+          border-left: 3px solid #8b5cf6;
+          margin: 1.5rem 0;
+          background: rgba(139, 92, 246, 0.08);
+          padding: 1.25rem;
+          border-radius: 0.5rem;
+        }
+        .ProseMirror blockquote p {
+          margin-bottom: 0.5rem;
+          line-height: 1.6;
+        }
+        .ProseMirror blockquote p:last-child {
+          margin-bottom: 0;
+        }
+        .ProseMirror p {
+          margin-bottom: 0.5rem;
+        }
+      `}</style>
+
       {isLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md transition-all duration-300">
           <div className="bg-zinc-900/90 text-violet-400 px-6 py-3 rounded-full text-sm md:text-base font-semibold flex items-center shadow-[0_0_30px_rgba(139,92,246,0.15)] border border-violet-500/20 animate-pulse">
@@ -282,7 +305,6 @@ export default function Editor() {
       <div className="flex-1 overflow-y-auto w-full relative bg-transparent custom-scrollbar">
         <DocumentHeader />
         <div className="p-5 md:p-10 max-w-4xl mx-auto w-full">
-          {/* 🔥 Yahan Button Connect Ho Gaya! */}
           <Toolbar editor={editor} onAskAI={handleAskAI} />
           <FloatingBubbleMenu editor={editor} />
           <EditorContent editor={editor} className="w-full h-full mt-2" />
