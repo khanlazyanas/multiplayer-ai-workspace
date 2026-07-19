@@ -56,7 +56,7 @@ export default function Editor() {
         class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror",
       },
       handleKeyDown: (view, event) => {
-        // 🔥 SHORTCUT: Ctrl+Enter (ya Cmd+Enter) dabane par AI chalega
+        // 🔥 SHORTCUT: Ctrl+Enter dabane par AI chalega
         const isCtrlEnter = event.key === 'Enter' && (event.ctrlKey || event.metaKey);
         const isNormalEnter = event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey;
 
@@ -75,7 +75,6 @@ export default function Editor() {
             }
           });
 
-          // Ctrl+Enter se direct AI trigger
           if (isCtrlEnter) {
             hasAI = true;
           }
@@ -99,23 +98,19 @@ export default function Editor() {
               const text = await res.text();
               if (!res.ok) throw new Error(text); 
               
-              const rawHTML = await marked.parse(text.trim());
-              
-              // 🔥 THE FINAL, FAIL-PROOF FIX:
-              // No Blockquotes. Sirf Horizontal Lines (<hr>) use kar rahe hain taaki fassne ka koi chance hi na ho!
-              const formattedResponse = `
-                <p></p>
-                <hr>
-                <p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>
-                ${rawHTML}
-                <hr>
-                <p></p>
-              `;
+              // 🔥 1. Ekdum strict cleaning: Koi hidden newlines ya spaces nahi
+              const cleanText = text.trim();
+              const rawHTML = await marked.parse(cleanText);
+              const safeHTML = rawHTML.replace(/\n/g, ''); // Ye line ne saare hidden gaps maar diye
+
+              // 🔥 2. Single-line string taaki Tiptap koi bhi faltoo space na banaye
+              const finalContent = `<p><br></p><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>` + safeHTML + `<p><br></p>`;
 
               if (editor) {
                 editor.chain()
                   .focus()
-                  .insertContent(formattedResponse)
+                  .insertContent(finalContent)
+                  .clearNodes() // 🔥 3. Ye command ensure karega ki tera cursor ekdum FRESH line par aaye (Koi indentation ya list na bache)
                   .run();
               }
             })
@@ -228,14 +223,6 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
-      {/* Basic Global CSS removed to prevent layout breaks! */}
-      <style>{`
-        .ProseMirror hr {
-          border-color: rgba(139, 92, 246, 0.3);
-          margin: 1rem 0;
-        }
-      `}</style>
-
       {isLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md transition-all duration-300">
           <div className="bg-zinc-900/90 text-violet-400 px-6 py-3 rounded-full text-sm md:text-base font-semibold flex items-center shadow-[0_0_30px_rgba(139,92,246,0.15)] border border-violet-500/20 animate-pulse">
