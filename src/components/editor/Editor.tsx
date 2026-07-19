@@ -56,7 +56,7 @@ export default function Editor() {
         class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror",
       },
       handleKeyDown: (view, event) => {
-        // 🔥 SHORTCUT: Ctrl+Enter dabane par AI chalega
+        // 🔥 SHORTCUT: Ctrl+Enter (ya Cmd+Enter) dabane par AI chalega
         const isCtrlEnter = event.key === 'Enter' && (event.ctrlKey || event.metaKey);
         const isNormalEnter = event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey;
 
@@ -98,20 +98,15 @@ export default function Editor() {
               const text = await res.text();
               if (!res.ok) throw new Error(text); 
               
-              // 🔥 1. Ekdum strict cleaning: Koi hidden newlines ya spaces nahi
-              const cleanText = text.trim();
-              const rawHTML = await marked.parse(cleanText);
-              const safeHTML = rawHTML.replace(/\n/g, ''); // Ye line ne saare hidden gaps maar diye
-
-              // 🔥 2. Single-line string taaki Tiptap koi bhi faltoo space na banaye
-              const finalContent = `<p><br></p><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>` + safeHTML + `<p><br></p>`;
+              const rawHTML = await marked.parse(text.trim());
+              const safeHTML = rawHTML.replace(/\n/g, ''); // Hidden enters saaf karne ke liye
+              
+              // 🔥 FIX: Single string jisme Blockquote hai aur uske TURENT BAAD ek <p></p> hai taaki cursor bahar nikle.
+              const finalContent = `<blockquote><p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>${safeHTML}</blockquote><p></p>`;
 
               if (editor) {
-                editor.chain()
-                  .focus()
-                  .insertContent(finalContent)
-                  .clearNodes() // 🔥 3. Ye command ensure karega ki tera cursor ekdum FRESH line par aaye (Koi indentation ya list na bache)
-                  .run();
+                // 🔥 RANGE ERROR FIX: .clearNodes() aur .chain() hata diya. Direct insert karo. Ye kabhi crash nahi hoga!
+                editor.commands.insertContent(finalContent);
               }
             })
             .catch((err) => {
@@ -223,6 +218,27 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
+      {/* Clean Global CSS for perfect Blockquote rendering */}
+      <style>{`
+        .ProseMirror blockquote {
+          border-left: 3px solid #8b5cf6;
+          margin: 1.5rem 0;
+          background: rgba(139, 92, 246, 0.08);
+          padding: 1.25rem;
+          border-radius: 0.5rem;
+        }
+        .ProseMirror blockquote p {
+          margin-bottom: 0.5rem;
+          line-height: 1.6;
+        }
+        .ProseMirror blockquote p:last-child {
+          margin-bottom: 0;
+        }
+        .ProseMirror p {
+          margin-bottom: 0.5rem;
+        }
+      `}</style>
+
       {isLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md transition-all duration-300">
           <div className="bg-zinc-900/90 text-violet-400 px-6 py-3 rounded-full text-sm md:text-base font-semibold flex items-center shadow-[0_0_30px_rgba(139,92,246,0.15)] border border-violet-500/20 animate-pulse">
