@@ -17,6 +17,9 @@ import { DocumentHeader } from "./DocumentHeader";
 import SlashCommands from './slashExtension';
 import slashSuggestion from './slashSuggestion';
 
+// 🔥 IMPORT ADDED FOR MARKDOWN PARSING
+import { marked } from "marked";
+
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
   const syncStatus = useStatus(); 
@@ -89,11 +92,22 @@ export default function Editor() {
               const text = await res.text();
               if (!res.ok) throw new Error(text); 
               
-              const latestState = view.state;
-              const tr = latestState.tr;
+              // 🔥 1. Markdown raw text ko properly HTML mein parse karo
+              const htmlContent = await marked.parse(text);
               
-              tr.insertText(`\n\n🤖 AI Response:\n${text}\n\n`, latestState.selection.to);
-              view.dispatch(tr);
+              // 🔥 2. Premium Professional Blockquote design banaya
+              const formattedResponse = `
+                <blockquote style="border-left: 3px solid #8b5cf6; padding-left: 1rem; margin-top: 1.5rem; margin-bottom: 1.5rem; background: rgba(139, 92, 246, 0.05); padding: 1rem; border-radius: 0.5rem;">
+                  <p><strong style="color: #a78bfa;">🤖 AI Assistant:</strong></p>
+                  ${htmlContent}
+                </blockquote>
+                <p></p>
+              `;
+
+              // 🔥 3. Tiptap ko properly HTML insert karne ka command diya
+              if (editor) {
+                editor.commands.insertContentAt(view.state.selection.to, formattedResponse);
+              }
             })
             .catch((err) => {
               console.error(err);
