@@ -6,6 +6,8 @@ import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension } from "@liveblocks/react-tiptap";
 import { useStatus } from "@liveblocks/react/suspense"; 
 import Mention from "@tiptap/extension-mention";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { common, createLowlight } from "lowlight";
 import suggestion from "./suggestion";
 import { Toolbar } from "./Toolbar";
 import toast from "react-hot-toast";
@@ -17,6 +19,9 @@ import { DocumentHeader } from "./DocumentHeader";
 import SlashCommands from './slashExtension';
 import slashSuggestion from './slashSuggestion';
 import { marked } from "marked";
+
+// 🔥 Initialize syntax highlighter with common languages (JS, Python, C++, HTML, etc.)
+const lowlight = createLowlight(common);
 
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
@@ -33,6 +38,8 @@ export default function Editor() {
       StarterKit.configure({
         // @ts-ignore
         history: false, 
+        // 🔥 Default codeBlock band karna padega taaki Lowlight wala kaam kare
+        codeBlock: false, 
       }),
       liveblocks,
       Mention.configure({
@@ -49,6 +56,14 @@ export default function Editor() {
           },
           ...slashSuggestion,
         }
+      }),
+      // 🔥 Naya CodeBlock Extension with Highlight Support
+      CodeBlockLowlight.configure({
+        lowlight,
+        defaultLanguage: 'javascript',
+        HTMLAttributes: {
+          class: 'rounded-md',
+        },
       }),
     ],
     editorProps: {
@@ -97,7 +112,6 @@ export default function Editor() {
               const text = await res.text();
               if (!res.ok) throw new Error(text); 
               
-              // 🔥 FIX: Ab hum enters (\n) ko delete nahi kar rahe! Taaki code blocks aur lists intact rahein.
               const cleanText = text.trim();
               const rawHTML = await marked.parse(cleanText); 
 
@@ -160,7 +174,6 @@ export default function Editor() {
       const text = await res.text();
       if (!res.ok) throw new Error(text); 
       
-      // 🔥 FIX: Yahan se bhi replace(/\n/g, '') hata diya gaya hai!
       const cleanText = text.trim();
       const rawHTML = await marked.parse(cleanText); 
 
@@ -242,7 +255,6 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
-      {/* 🔥 PREMIUM CSS FOR CODE BLOCKS, LISTS & BLOCKQUOTES */}
       <style>{`
         .ProseMirror blockquote {
           border-left: 3px solid #8b5cf6;
@@ -258,27 +270,32 @@ export default function Editor() {
         .ProseMirror blockquote p:last-child {
           margin-bottom: 0;
         }
-        /* ✨ IDE Style Code Block */
+        
+        /* 🔥 PREMIUM ATOM ONE DARK SYNTAX HIGHLIGHTING 🔥 */
         .ProseMirror pre {
           background: #18181b;
-          color: #e4e4e7;
-          padding: 1rem;
+          color: #abb2bf;
+          padding: 1.2rem;
           border-radius: 0.5rem;
-          border: 1px solid rgba(255,255,255,0.1);
-          font-family: monospace;
+          border: 1px solid rgba(255,255,255,0.05);
+          font-family: 'Fira Code', 'Courier New', Courier, monospace;
+          font-size: 0.9em;
           margin: 1rem 0;
           overflow-x: auto;
         }
-        .ProseMirror code {
-          font-family: monospace;
-          background: rgba(255,255,255,0.1);
-          padding: 0.2rem 0.4rem;
-          border-radius: 0.25rem;
-        }
         .ProseMirror pre code {
-          background: transparent;
+          background: none;
           padding: 0;
+          color: inherit;
         }
+        .hljs-keyword, .hljs-operator { color: #c678dd; } /* Purple */
+        .hljs-built_in, .hljs-type, .hljs-class .hljs-title { color: #e5c07b; } /* Yellow */
+        .hljs-literal, .hljs-number { color: #d19a66; } /* Orange */
+        .hljs-string { color: #98c379; } /* Green */
+        .hljs-title.function_ { color: #61afef; } /* Blue */
+        .hljs-comment { color: #5c6370; font-style: italic; } /* Grey */
+        .hljs-variable, .hljs-property { color: #e06c75; } /* Red */
+
         /* List Styling */
         .ProseMirror ul, .ProseMirror ol {
           padding-left: 1.5rem;
