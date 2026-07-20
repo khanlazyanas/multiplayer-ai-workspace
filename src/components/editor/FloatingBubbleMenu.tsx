@@ -1,22 +1,56 @@
 "use client";
 
-// 🔥 Vercel Bypass (Strict)
-import * as TiptapReact from '@tiptap/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from "react-hot-toast";
 import { marked } from "marked";
 
 export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [show, setShow] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
 
-  // Agar editor ready nahi hai, toh kuch mat dikhao
-  if (!editor) return null;
+  // 🔥 CUSTOM NATIVE POSITIONING (Bypasses Tiptap's buggy module)
+  useEffect(() => {
+    if (!editor) return;
 
-  // 🔥 Runtime extraction without causing Vercel static analysis errors
-  const BubbleMenu = (TiptapReact as any).BubbleMenu;
+    const updateMenu = () => {
+      if (editor.isDestroyed || editor.state.selection.empty) {
+        setShow(false);
+        return;
+      }
 
-  // Safety fallback
-  if (!BubbleMenu) return null;
+      // Native browser API se exact coordinates nikal rahe hain
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+
+        if (rect.width === 0 || rect.height === 0) {
+          setShow(false);
+          return;
+        }
+
+        // Exact text ke upar center mein menu set kar rahe hain
+        setPosition({
+          top: rect.top - 55, 
+          left: rect.left + (rect.width / 2),
+        });
+        setShow(true);
+      }, 10);
+    };
+
+    editor.on('selectionUpdate', updateMenu);
+    document.addEventListener('scroll', updateMenu, true);
+
+    return () => {
+      editor.off('selectionUpdate', updateMenu);
+      document.removeEventListener('scroll', updateMenu, true);
+    };
+  }, [editor]);
+
+  if (!editor || !show) return null;
 
   const handleAIAssist = async (action: 'explain' | 'refactor' | 'fix') => {
     const { state } = editor;
@@ -74,20 +108,21 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
       toast.error("Failed to generate AI response", { id: toastId });
     } finally {
       setIsLoading(false);
+      setShow(false); // Menu ko manually hide kardo task complete hone par
     }
   };
 
   return (
-    <BubbleMenu
-      editor={editor}
-      // 🔥 Sab custom logic hata diya. Ab Tiptap khud decide karega kab dikhana hai (Selection par)
-      tippyOptions={{ duration: 100, placement: 'top' }}
-      className="flex items-center gap-1 bg-[#18181b] border border-zinc-700/80 shadow-2xl rounded-lg p-1.5 z-[99999]"
+    // 🔥 onMouseDown preventDefault is IMP taaki click karne par selection gayab na ho
+    <div 
+      onMouseDown={(e) => e.preventDefault()} 
+      className="fixed flex items-center gap-1 bg-[#0c0c0e] border border-zinc-700/80 shadow-[0_15px_40px_rgba(0,0,0,0.8)] rounded-lg p-1.5 z-[999999] transition-all transform -translate-x-1/2"
+      style={{ top: position.top, left: position.left }}
     >
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`p-1.5 px-3 text-sm font-semibold rounded-md transition-all ${
-          editor.isActive('bold') ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+          editor.isActive('bold') ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
         }`}
       >
         B
@@ -95,7 +130,7 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
       <button
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={`p-1.5 px-3 text-sm italic font-serif rounded-md transition-all ${
-          editor.isActive('italic') ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+          editor.isActive('italic') ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
         }`}
       >
         I
@@ -103,7 +138,7 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
       <button
         onClick={() => editor.chain().focus().toggleStrike().run()}
         className={`p-1.5 px-3 text-sm line-through rounded-md transition-all ${
-          editor.isActive('strike') ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+          editor.isActive('strike') ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
         }`}
       >
         S
@@ -119,6 +154,7 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
 
       <div className="w-[1px] h-5 bg-zinc-700/80 mx-1"></div>
 
+      {/* 🚀 AI DEVELOPER TOOLS */}
       <button 
         onClick={() => handleAIAssist('explain')} 
         disabled={isLoading} 
@@ -140,6 +176,6 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
       >
         🐛 Fix Bug
       </button>
-    </BubbleMenu>
+    </div>
   );
 };
