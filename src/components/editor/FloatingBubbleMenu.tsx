@@ -24,7 +24,6 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
 
     if (!selectedText.trim()) return;
 
-    // 🔥 AI Prompts
     let promptTemplate = "";
     let aiTitle = "";
     
@@ -57,7 +56,6 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
       const cleanText = text.trim();
       const rawHTML = await marked.parse(cleanText);
 
-      // AI Response with Premium Blockquote Style
       const finalContent = `
         <p></p>
         <blockquote style="border-left: 3px solid #8b5cf6; background: rgba(139, 92, 246, 0.08); padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">
@@ -67,7 +65,6 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
         <p></p>
       `;
 
-      // Code ko selection ke baad insert karna
       editor.chain().focus().setTextSelection(to).insertContent(finalContent).run();
       
       toast.success("AI Task Complete!", { id: toastId });
@@ -82,10 +79,15 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
   return (
     <BubbleMenu
       editor={editor}
-      tippyOptions={{ duration: 150, placement: 'top', animation: 'shift-away' }}
+      // 🔥 FIX 1: 'animation' property hata di taaki invisible na rahe
+      tippyOptions={{ duration: 150, placement: 'top' }}
+      
+      // 🔥 FIX 2: Explicitly Tiptap ko bata rahe hain ki jab text select ho (from !== to), tabhi menu show karo
+      shouldShow={({ editor, from, to }: any) => {
+        return from !== to && editor.isEditable;
+      }}
       className="flex items-center gap-1 bg-[#0A0A0A] border border-zinc-800 shadow-[0_15px_40px_rgba(0,0,0,0.6)] rounded-lg p-1.5 z-[9999] backdrop-blur-xl overflow-hidden"
     >
-      {/* 🛑 TUMHARE PURANE BUTTONS (Unchanged) */}
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`p-1.5 px-3 text-sm font-semibold rounded-md transition-all ${
@@ -119,7 +121,6 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
         {'</>'}
       </button>
 
-      {/* Divider */}
       <div className="w-[1px] h-5 bg-zinc-700/80 mx-1"></div>
 
       {/* 🚀 NAYE AI BUTTONS */}
