@@ -4,12 +4,17 @@ import React, { useState, useEffect } from 'react';
 import toast from "react-hot-toast";
 import { marked } from "marked";
 
+// --- Professional SVG Icons ---
+const SparklesIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>;
+const WrenchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
+const BugIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-3.9"/><path d="M8 14H4"/><path d="M16 14h4"/><path d="M9 18h-4"/><path d="M15 18h4"/></svg>;
+const SpinnerIcon = () => <svg className="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
+
 export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<string | null>(null); // Track which button is loading
   const [show, setShow] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
 
-  // 🔥 CUSTOM NATIVE POSITIONING (Bypasses Tiptap's buggy module)
   useEffect(() => {
     if (!editor) return;
 
@@ -19,7 +24,6 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
         return;
       }
 
-      // Native browser API se exact coordinates nikal rahe hain
       setTimeout(() => {
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) return;
@@ -32,7 +36,6 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
           return;
         }
 
-        // Exact text ke upar center mein menu set kar rahe hain
         setPosition({
           top: rect.top - 55, 
           left: rect.left + (rect.width / 2),
@@ -73,7 +76,7 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
       aiTitle = "🐛 AI Bug Fix";
     }
 
-    setIsLoading(true);
+    setIsLoading(action); // Set specific button to loading state
     const toastId = toast.loading(`${action === 'explain' ? 'Analyzing' : action === 'refactor' ? 'Optimizing' : 'Debugging'} code...`, {
       style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
     });
@@ -107,74 +110,77 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
       console.error(err);
       toast.error("Failed to generate AI response", { id: toastId });
     } finally {
-      setIsLoading(false);
-      setShow(false); // Menu ko manually hide kardo task complete hone par
+      setIsLoading(null);
+      setShow(false); 
     }
   };
 
   return (
-    // 🔥 onMouseDown preventDefault is IMP taaki click karne par selection gayab na ho
     <div 
       onMouseDown={(e) => e.preventDefault()} 
-      className="fixed flex items-center gap-1 bg-[#0c0c0e] border border-zinc-700/80 shadow-[0_15px_40px_rgba(0,0,0,0.8)] rounded-lg p-1.5 z-[999999] transition-all transform -translate-x-1/2"
+      // 🔥 Glassmorphism, Pop-in Animation & Premium Borders added here
+      className="fixed flex items-center gap-1 bg-[#0c0c0e]/85 backdrop-blur-md border border-zinc-700/60 shadow-[0_20px_40px_rgba(0,0,0,0.4)] rounded-xl p-1.5 z-[999999] transition-all duration-200 ease-out animate-in fade-in zoom-in-95 transform -translate-x-1/2"
       style={{ top: position.top, left: position.left }}
     >
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`p-1.5 px-3 text-sm font-semibold rounded-md transition-all ${
-          editor.isActive('bold') ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+        className={`p-1.5 px-3 text-sm font-semibold rounded-lg transition-all ${
+          editor.isActive('bold') ? 'bg-zinc-700/80 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
         }`}
       >
         B
       </button>
       <button
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`p-1.5 px-3 text-sm italic font-serif rounded-md transition-all ${
-          editor.isActive('italic') ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+        className={`p-1.5 px-3 text-sm italic font-serif rounded-lg transition-all ${
+          editor.isActive('italic') ? 'bg-zinc-700/80 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
         }`}
       >
         I
       </button>
       <button
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={`p-1.5 px-3 text-sm line-through rounded-md transition-all ${
-          editor.isActive('strike') ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+        className={`p-1.5 px-3 text-sm line-through rounded-lg transition-all ${
+          editor.isActive('strike') ? 'bg-zinc-700/80 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
         }`}
       >
         S
       </button>
       <button
         onClick={() => editor.chain().focus().toggleCode().run()}
-        className={`p-1.5 px-3 text-xs font-mono rounded-md transition-all ${
+        className={`p-1.5 px-3 text-xs font-mono rounded-lg transition-all ${
           editor.isActive('code') ? 'bg-violet-500/20 text-violet-400 shadow-sm border border-violet-500/30' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
         }`}
       >
         {'</>'}
       </button>
 
-      <div className="w-[1px] h-5 bg-zinc-700/80 mx-1"></div>
+      <div className="w-[1px] h-5 bg-zinc-700/80 mx-1.5 rounded-full"></div>
 
-      {/* 🚀 AI DEVELOPER TOOLS */}
+      {/* 🚀 AI DEVELOPER TOOLS with SVGs and Spinners */}
       <button 
         onClick={() => handleAIAssist('explain')} 
-        disabled={isLoading} 
-        className="px-2.5 py-1.5 text-xs font-medium text-violet-400 hover:bg-violet-500/20 hover:text-violet-300 rounded-md transition-all flex items-center gap-1.5 disabled:opacity-50"
+        disabled={isLoading !== null} 
+        className="px-3 py-1.5 text-xs font-semibold text-violet-400 hover:bg-violet-500/20 hover:text-violet-300 rounded-lg transition-all flex items-center gap-2 disabled:opacity-50"
       >
-        🧠 Explain
+        {isLoading === 'explain' ? <SpinnerIcon /> : <SparklesIcon />}
+        Explain
       </button>
       <button 
         onClick={() => handleAIAssist('refactor')} 
-        disabled={isLoading} 
-        className="px-2.5 py-1.5 text-xs font-medium text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 rounded-md transition-all flex items-center gap-1.5 disabled:opacity-50"
+        disabled={isLoading !== null} 
+        className="px-3 py-1.5 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 rounded-lg transition-all flex items-center gap-2 disabled:opacity-50"
       >
-        🛠 Refactor
+        {isLoading === 'refactor' ? <SpinnerIcon /> : <WrenchIcon />}
+        Refactor
       </button>
       <button 
         onClick={() => handleAIAssist('fix')} 
-        disabled={isLoading} 
-        className="px-2.5 py-1.5 text-xs font-medium text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 rounded-md transition-all flex items-center gap-1.5 disabled:opacity-50"
+        disabled={isLoading !== null} 
+        className="px-3 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 rounded-lg transition-all flex items-center gap-2 disabled:opacity-50"
       >
-        🐛 Fix Bug
+        {isLoading === 'fix' ? <SpinnerIcon /> : <BugIcon />}
+        Fix Bug
       </button>
     </div>
   );
