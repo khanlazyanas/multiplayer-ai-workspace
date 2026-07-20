@@ -1,6 +1,6 @@
 "use client";
 
-// 🔥 Turbopack Bypass: Wildcard import se hum strict static analysis ko bypass kar rahe hain
+// 🔥 Wapas wahi bypass lagaya jo tumne originally socha tha!
 import * as TiptapReact from '@tiptap/react';
 import React, { useState } from 'react';
 import toast from "react-hot-toast";
@@ -11,10 +11,9 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
 
   if (!editor) return null;
 
-  // 🔥 Runtime par BubbleMenu extract kar rahe hain taaki build fail na ho
+  // 🔥 Runtime par BubbleMenu extract kar rahe hain taaki build/TypeScript fail na ho
   const BubbleMenu = (TiptapReact as any).BubbleMenu;
 
-  // Agar bypass ke baad bhi load na ho (safe fallback)
   if (!BubbleMenu) return null;
 
   const handleAIAssist = async (action: 'explain' | 'refactor' | 'fix') => {
@@ -79,14 +78,14 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
   return (
     <BubbleMenu
       editor={editor}
-      // 🔥 FIX 1: 'animation' property hata di taaki invisible na rahe
+      // 🔥 FIX 1: Animation hata diya jo menu ko invisible bana raha tha
       tippyOptions={{ duration: 150, placement: 'top' }}
       
-      // 🔥 FIX 2: Explicitly Tiptap ko bata rahe hain ki jab text select ho (from !== to), tabhi menu show karo
+      // 🔥 FIX 2: Explicit logic ki jab text select ho tabhi dikhao
       shouldShow={({ editor, from, to }: any) => {
         return from !== to && editor.isEditable;
       }}
-      className="flex items-center gap-1 bg-[#0A0A0A] border border-zinc-800 shadow-[0_15px_40px_rgba(0,0,0,0.6)] rounded-lg p-1.5 z-[9999] backdrop-blur-xl overflow-hidden"
+      className="flex items-center gap-1 bg-[#0A0A0A] border border-zinc-800 shadow-[0_15px_40px_rgba(0,0,0,0.6)] rounded-lg p-1.5 z-[9999] backdrop-blur-xl"
     >
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -121,7 +120,8 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
         {'</>'}
       </button>
 
-      <div className="w-[1px] h-5 bg-zinc-700/80 mx-1"></div>
+      {/* Divider */}
+      <div className="w-[1px] h-4 bg-zinc-700 mx-1"></div>
 
       {/* 🚀 NAYE AI BUTTONS */}
       <button 
