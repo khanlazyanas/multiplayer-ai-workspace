@@ -272,13 +272,15 @@ export default function Editor() {
       return;
     }
     
-    // 🔥 DEBUG TRACKER ADDED
     toast.success("Opening comment box...", { 
       duration: 1500,
       style: { background: '#18181b', color: '#38bdf8', border: '1px solid #0369a1' } 
     });
     
-    editor.chain().focus().addPendingComment().run();
+    // 🔥 THE FIX: Adding a delay ensures Liveblocks doesn't instantly auto-close the composer thinking it was an outside click.
+    setTimeout(() => {
+      editor.chain().focus().addPendingComment().run();
+    }, 50);
   };
 
   if (!editor) return <div className="flex items-center justify-center min-h-[60vh] text-zinc-500 font-medium animate-pulse">Initializing Workspace Engine...</div>;
@@ -327,6 +329,11 @@ export default function Editor() {
       )}
 
       <style>{`
+        /* 🔥 FORCE Z-INDEX ON LIVEBLOCKS COMPONENTS */
+        .lb-root {
+          --lb-z-index: 999999 !important; 
+        }
+
         .ProseMirror blockquote {
           border-left: 3px solid #8b5cf6;
           margin: 1.5rem 0;
@@ -406,9 +413,10 @@ export default function Editor() {
           <ActiveUsers />
           <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
           
+          {/* 🔥 FIX: onPointerDown blocks event bubbling, stopping the composer from closing instantly */}
           <button 
             type="button"
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault(); 
               e.stopPropagation();
             }} 
@@ -436,7 +444,7 @@ export default function Editor() {
           <Toolbar editor={editor} onAskAI={handleAskAI} />
           <FloatingBubbleMenu editor={editor} />
           
-          {/* 🔥 High Z-Index Fix to force Composer over other elements */}
+          {/* 🔥 High Z-Index Fix */}
           <div className="z-[99999] relative">
             <FloatingThreads editor={editor} threads={threads} className="z-[99999]" />
             <FloatingComposer editor={editor} className="z-[99999]" />
