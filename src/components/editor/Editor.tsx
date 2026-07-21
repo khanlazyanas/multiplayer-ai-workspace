@@ -32,7 +32,6 @@ export default function Editor() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  // 🔥 Share Modal Track karne ke liye naya state
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const editor = useEditor({
@@ -62,7 +61,10 @@ export default function Editor() {
           ...slashSuggestion,
         }
       }),
-      CodeBlockLowlight.configure({
+      // 🔥 THE ULTIMATE FIX: Extending CodeBlock to allow comments inside code
+      CodeBlockLowlight.extend({
+        marks: 'liveblocksComment', 
+      }).configure({
         lowlight,
         defaultLanguage: 'javascript',
         HTMLAttributes: {
@@ -252,7 +254,22 @@ export default function Editor() {
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Invite link copied to clipboard!");
-    setIsShareModalOpen(false); // Modal close kar dena copy hone ke baad
+    setIsShareModalOpen(false); 
+  };
+
+  // 🔥 Comment handler jo check karega ki text selected hai ya nahi
+  const handleAddComment = () => {
+    if (!editor) return;
+    
+    // Agar user ne kuch select nahi kiya hai, toh fail hone ke bajaye message do
+    if (editor.state.selection.empty) {
+      toast.error("Please highlight some text or code first to comment!", {
+        style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
+      });
+      return;
+    }
+    
+    editor.chain().focus().addPendingComment().run();
   };
 
   if (!editor) return <div className="flex items-center justify-center min-h-[60vh] text-zinc-500 font-medium animate-pulse">Initializing Workspace Engine...</div>;
@@ -260,7 +277,7 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
-      {/* 🔥 THE PRO SHARE MODAL (Glassmorphism & Professional UI) */}
+      {/* THE PRO SHARE MODAL */}
       {isShareModalOpen && (
         <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
@@ -381,17 +398,24 @@ export default function Editor() {
           <ActiveUsers />
           <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
           
-          {/* 🔥 FIX: onMouseDown preventDefault laga diya, ab selection lost nahi hoga! */}
+          {/* 🔥 FOOLPROOF COMMENT BUTTON */}
           <button 
-            onMouseDown={(e) => e.preventDefault()} 
-            onClick={() => editor.chain().focus().addPendingComment().run()} 
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault(); 
+              e.stopPropagation();
+            }} 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleAddComment();
+            }} 
             className="flex items-center gap-1.5 text-xs font-semibold bg-sky-600/90 hover:bg-sky-500 text-white px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(2,132,199,0.3)] transition-all"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             Comment
           </button>
           
-          {/* 🔥 Naya Share Modal Trigger */}
           <button onClick={() => setIsShareModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95">Share</button>
           <button onClick={exportDocumentPDF} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">PDF</button>
           <button onClick={exportDocumentTXT} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">TXT</button>
