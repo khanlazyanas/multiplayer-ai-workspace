@@ -20,7 +20,6 @@ import SlashCommands from './slashExtension';
 import slashSuggestion from './slashSuggestion';
 import { marked } from "marked";
 
-// 🔥 Liveblocks UI Styles (Zaroori hai taaki comments professional dikhein)
 import "@liveblocks/react-ui/styles.css";
 import "@liveblocks/react-ui/styles/dark/attributes.css";
 
@@ -29,12 +28,12 @@ const lowlight = createLowlight(common);
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
   const syncStatus = useStatus(); 
-  
-  // 🔥 Liveblocks Threads Hook (Saare comments yahan se aayenge)
   const { threads } = useThreads();
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  // 🔥 Share Modal Track karne ke liye naya state
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -47,7 +46,7 @@ export default function Editor() {
         history: false, 
         codeBlock: false, 
       }),
-      liveblocks, // 🔥 Ye extension automatically comments ko Tiptap se jod dega
+      liveblocks, 
       Mention.configure({
         HTMLAttributes: {
           class: 'bg-zinc-800 text-violet-400 rounded px-1.5 py-0.5 font-semibold shadow-sm',
@@ -253,6 +252,7 @@ export default function Editor() {
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Invite link copied to clipboard!");
+    setIsShareModalOpen(false); // Modal close kar dena copy hone ke baad
   };
 
   if (!editor) return <div className="flex items-center justify-center min-h-[60vh] text-zinc-500 font-medium animate-pulse">Initializing Workspace Engine...</div>;
@@ -260,6 +260,47 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
+      {/* 🔥 THE PRO SHARE MODAL (Glassmorphism & Professional UI) */}
+      {isShareModalOpen && (
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
+            <div className="p-5 border-b border-zinc-800/80 flex justify-between items-center bg-[#121214]">
+              <div>
+                <h3 className="text-lg font-semibold text-zinc-100">Share Workspace</h3>
+                <p className="text-xs text-zinc-400 mt-1">Send this link to anyone to collaborate with them.</p>
+              </div>
+              <button onClick={() => setIsShareModalOpen(false)} className="text-zinc-400 hover:text-white p-1 rounded-md hover:bg-zinc-800 transition-all">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="flex gap-2 mb-2">
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={typeof window !== 'undefined' ? window.location.href : ''} 
+                  className="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none" 
+                />
+                <button onClick={copyLink} className="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-lg text-sm font-semibold shadow-lg transition-all active:scale-95">
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-[#121214] px-6 py-4 border-t border-zinc-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 border border-violet-500/30">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+                <span className="text-sm font-medium text-zinc-300">Liveblocks Users</span>
+              </div>
+              <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">Full Access</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         .ProseMirror blockquote {
           border-left: 3px solid #8b5cf6;
@@ -340,8 +381,9 @@ export default function Editor() {
           <ActiveUsers />
           <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
           
-          {/* 🔥 Naya Comment Button */}
+          {/* 🔥 FIX: onMouseDown preventDefault laga diya, ab selection lost nahi hoga! */}
           <button 
+            onMouseDown={(e) => e.preventDefault()} 
             onClick={() => editor.chain().focus().addPendingComment().run()} 
             className="flex items-center gap-1.5 text-xs font-semibold bg-sky-600/90 hover:bg-sky-500 text-white px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(2,132,199,0.3)] transition-all"
           >
@@ -349,8 +391,8 @@ export default function Editor() {
             Comment
           </button>
           
-          {/* Purana Share button (jise hum next update mein master Modal banayenge) */}
-          <button onClick={copyLink} className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95">Share</button>
+          {/* 🔥 Naya Share Modal Trigger */}
+          <button onClick={() => setIsShareModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95">Share</button>
           <button onClick={exportDocumentPDF} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">PDF</button>
           <button onClick={exportDocumentTXT} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">TXT</button>
         </div>
@@ -359,12 +401,10 @@ export default function Editor() {
       <div className="flex-1 overflow-y-auto w-full relative bg-transparent custom-scrollbar">
         <DocumentHeader />
         
-        {/* 🔥 lb-dark className zaroori hai dark theme UI ke liye */}
         <div className="p-5 md:p-10 max-w-4xl mx-auto w-full relative lb-root lb-dark">
           <Toolbar editor={editor} onAskAI={handleAskAI} />
           <FloatingBubbleMenu editor={editor} />
           
-          {/* 🔥 Threads and Composer Components Drop */}
           <FloatingThreads editor={editor} threads={threads} />
           <FloatingComposer editor={editor} />
           
