@@ -8,16 +8,17 @@ import { marked } from "marked";
 const SparklesIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>;
 const WrenchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
 const BugIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-3.9"/><path d="M8 14H4"/><path d="M16 14h4"/><path d="M9 18h-4"/><path d="M15 18h4"/></svg>;
-// 🔥 Naye Writer Icons 
 const PenIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>;
 const CheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>;
 const SpinnerIcon = () => <svg className="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
+// 🔥 Naya Comment Icon
+const MessageIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>;
 
 export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [show, setShow] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
-  const [isCodeMode, setIsCodeMode] = useState(false); // 🔥 Smart Context State
+  const [isCodeMode, setIsCodeMode] = useState(false); 
 
   useEffect(() => {
     if (!editor) return;
@@ -28,7 +29,6 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
         return;
       }
 
-      // 🔥 Check if the current selection is code
       const isCode = editor.isActive('codeBlock') || editor.isActive('code');
       setIsCodeMode(isCode);
 
@@ -63,7 +63,6 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
 
   if (!editor || !show) return null;
 
-  // 🔥 Action parameter type updated to handle all cases
   const handleAIAssist = async (action: string) => {
     const { state } = editor;
     const { from, to } = state.selection;
@@ -74,7 +73,6 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
     let promptTemplate = "";
     let aiTitle = "";
     
-    // Developer Commands
     if (action === 'explain') {
       promptTemplate = `Please explain the following code simply:\n\n${selectedText}`;
       aiTitle = "🧠 AI Explanation";
@@ -85,7 +83,6 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
       promptTemplate = `Find and fix any bugs in the following code. Explain what was wrong and how you fixed it:\n\n${selectedText}`;
       aiTitle = "🐛 AI Bug Fix";
     } 
-    // Writer Commands
     else if (action === 'improve') {
       promptTemplate = `Rewrite and improve the following text to make it sound professional, clear, and engaging:\n\n${selectedText}`;
       aiTitle = "✨ Improved Text";
@@ -172,9 +169,20 @@ export const FloatingBubbleMenu = ({ editor }: { editor: any }) => {
         {'</>'}
       </button>
 
+      {/* 🔥 NEW COMMENT BUTTON IN FLOATING MENU */}
+      <button 
+        onClick={() => {
+          editor.chain().focus().addPendingComment().run();
+          setShow(false); // Comment box clearly dikhane ke liye menu hide kar rahe hain
+        }} 
+        className="p-1.5 px-2.5 ml-1 text-sm font-semibold rounded-lg transition-all text-sky-400 hover:bg-sky-500/20 hover:text-sky-300 shadow-sm flex items-center gap-1.5"
+        title="Add Comment"
+      >
+        <MessageIcon />
+      </button>
+
       <div className="w-[1px] h-5 bg-zinc-700/80 mx-1.5 rounded-full"></div>
 
-      {/* 🔥 SMART AI SWITCH: Code mode vs Text mode */}
       {isCodeMode ? (
         <>
           <button 
