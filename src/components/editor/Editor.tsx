@@ -61,10 +61,8 @@ export default function Editor() {
           ...slashSuggestion,
         }
       }),
-      // 🔥 THE ULTIMATE FIX: Extending CodeBlock to allow comments inside code
-      CodeBlockLowlight.extend({
-        marks: 'liveblocksComment', 
-      }).configure({
+      // 🔥 REVERTED HACK: Wapas original aur stable CodeBlock par aa gaye hain taaki crash na ho
+      CodeBlockLowlight.configure({
         lowlight,
         defaultLanguage: 'javascript',
         HTMLAttributes: {
@@ -257,13 +255,19 @@ export default function Editor() {
     setIsShareModalOpen(false); 
   };
 
-  // 🔥 Comment handler jo check karega ki text selected hai ya nahi
+  // 🔥 Comment handler (Sirf tab chalega jab selected ho aur Code Block na ho)
   const handleAddComment = () => {
     if (!editor) return;
     
-    // Agar user ne kuch select nahi kiya hai, toh fail hone ke bajaye message do
     if (editor.state.selection.empty) {
-      toast.error("Please highlight some text or code first to comment!", {
+      toast.error("Please highlight text first to comment!", {
+        style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
+      });
+      return;
+    }
+    
+    if (editor.isActive('codeBlock')) {
+      toast.error("Comments cannot be added directly inside code blocks.", {
         style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
       });
       return;
@@ -277,7 +281,6 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
-      {/* THE PRO SHARE MODAL */}
       {isShareModalOpen && (
         <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
@@ -398,7 +401,6 @@ export default function Editor() {
           <ActiveUsers />
           <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
           
-          {/* 🔥 FOOLPROOF COMMENT BUTTON */}
           <button 
             type="button"
             onMouseDown={(e) => {
