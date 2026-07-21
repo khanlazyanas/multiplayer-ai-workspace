@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useLiveblocksExtension } from "@liveblocks/react-tiptap";
-import { useStatus } from "@liveblocks/react/suspense"; 
+import { useLiveblocksExtension, FloatingComposer, FloatingThreads } from "@liveblocks/react-tiptap";
+import { useStatus, useThreads } from "@liveblocks/react/suspense"; 
 import Mention from "@tiptap/extension-mention";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
@@ -20,12 +20,19 @@ import SlashCommands from './slashExtension';
 import slashSuggestion from './slashSuggestion';
 import { marked } from "marked";
 
-// 🔥 Initialize syntax highlighter with common languages (JS, Python, C++, HTML, etc.)
+// 🔥 Liveblocks UI Styles (Zaroori hai taaki comments professional dikhein)
+import "@liveblocks/react-ui/styles.css";
+import "@liveblocks/react-ui/styles/dark/attributes.css";
+
 const lowlight = createLowlight(common);
 
 export default function Editor() {
   const liveblocks = useLiveblocksExtension();
   const syncStatus = useStatus(); 
+  
+  // 🔥 Liveblocks Threads Hook (Saare comments yahan se aayenge)
+  const { threads } = useThreads();
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -38,10 +45,9 @@ export default function Editor() {
       StarterKit.configure({
         // @ts-ignore
         history: false, 
-        // 🔥 Default codeBlock band karna padega taaki Lowlight wala kaam kare
         codeBlock: false, 
       }),
-      liveblocks,
+      liveblocks, // 🔥 Ye extension automatically comments ko Tiptap se jod dega
       Mention.configure({
         HTMLAttributes: {
           class: 'bg-zinc-800 text-violet-400 rounded px-1.5 py-0.5 font-semibold shadow-sm',
@@ -57,7 +63,6 @@ export default function Editor() {
           ...slashSuggestion,
         }
       }),
-      // 🔥 Naya CodeBlock Extension with Highlight Support
       CodeBlockLowlight.configure({
         lowlight,
         defaultLanguage: 'javascript',
@@ -271,7 +276,6 @@ export default function Editor() {
           margin-bottom: 0;
         }
         
-        /* 🔥 PREMIUM ATOM ONE DARK SYNTAX HIGHLIGHTING 🔥 */
         .ProseMirror pre {
           background: #18181b;
           color: #abb2bf;
@@ -288,15 +292,14 @@ export default function Editor() {
           padding: 0;
           color: inherit;
         }
-        .hljs-keyword, .hljs-operator { color: #c678dd; } /* Purple */
-        .hljs-built_in, .hljs-type, .hljs-class .hljs-title { color: #e5c07b; } /* Yellow */
-        .hljs-literal, .hljs-number { color: #d19a66; } /* Orange */
-        .hljs-string { color: #98c379; } /* Green */
-        .hljs-title.function_ { color: #61afef; } /* Blue */
-        .hljs-comment { color: #5c6370; font-style: italic; } /* Grey */
-        .hljs-variable, .hljs-property { color: #e06c75; } /* Red */
+        .hljs-keyword, .hljs-operator { color: #c678dd; } 
+        .hljs-built_in, .hljs-type, .hljs-class .hljs-title { color: #e5c07b; } 
+        .hljs-literal, .hljs-number { color: #d19a66; } 
+        .hljs-string { color: #98c379; } 
+        .hljs-title.function_ { color: #61afef; } 
+        .hljs-comment { color: #5c6370; font-style: italic; } 
+        .hljs-variable, .hljs-property { color: #e06c75; } 
 
-        /* List Styling */
         .ProseMirror ul, .ProseMirror ol {
           padding-left: 1.5rem;
           margin-bottom: 0.5rem;
@@ -336,6 +339,17 @@ export default function Editor() {
           </div>
           <ActiveUsers />
           <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
+          
+          {/* 🔥 Naya Comment Button */}
+          <button 
+            onClick={() => editor.chain().focus().addPendingComment().run()} 
+            className="flex items-center gap-1.5 text-xs font-semibold bg-sky-600/90 hover:bg-sky-500 text-white px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(2,132,199,0.3)] transition-all"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            Comment
+          </button>
+          
+          {/* Purana Share button (jise hum next update mein master Modal banayenge) */}
           <button onClick={copyLink} className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95">Share</button>
           <button onClick={exportDocumentPDF} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">PDF</button>
           <button onClick={exportDocumentTXT} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">TXT</button>
@@ -344,9 +358,16 @@ export default function Editor() {
       
       <div className="flex-1 overflow-y-auto w-full relative bg-transparent custom-scrollbar">
         <DocumentHeader />
-        <div className="p-5 md:p-10 max-w-4xl mx-auto w-full">
+        
+        {/* 🔥 lb-dark className zaroori hai dark theme UI ke liye */}
+        <div className="p-5 md:p-10 max-w-4xl mx-auto w-full relative lb-root lb-dark">
           <Toolbar editor={editor} onAskAI={handleAskAI} />
           <FloatingBubbleMenu editor={editor} />
+          
+          {/* 🔥 Threads and Composer Components Drop */}
+          <FloatingThreads editor={editor} threads={threads} />
+          <FloatingComposer editor={editor} />
+          
           <EditorContent editor={editor} className="w-full h-full mt-2" />
         </div>
       </div>

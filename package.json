@@ -18,6 +18,7 @@
     "@liveblocks/node": "^3.22.0",
     "@liveblocks/react": "^3.22.0",
     "@liveblocks/react-tiptap": "^3.22.0",
+    "@liveblocks/react-ui": "^3.22.0",
     "@liveblocks/yjs": "^3.22.0",
     "@tippyjs/react": "^4.2.6",
     "@tiptap/core": "^3.28.0",
