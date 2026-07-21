@@ -20,6 +20,7 @@ import SlashCommands from './slashExtension';
 import slashSuggestion from './slashSuggestion';
 import { marked } from "marked";
 
+// 🔥 Note: CSS imports ko app/layout.tsx ya globals.css mein zaroor dalna!
 import "@liveblocks/react-ui/styles.css";
 import "@liveblocks/react-ui/styles/dark/attributes.css";
 
@@ -61,7 +62,6 @@ export default function Editor() {
           ...slashSuggestion,
         }
       }),
-      // 🔥 REVERTED HACK: Wapas original aur stable CodeBlock par aa gaye hain taaki crash na ho
       CodeBlockLowlight.configure({
         lowlight,
         defaultLanguage: 'javascript',
@@ -255,7 +255,6 @@ export default function Editor() {
     setIsShareModalOpen(false); 
   };
 
-  // 🔥 Comment handler (Sirf tab chalega jab selected ho aur Code Block na ho)
   const handleAddComment = () => {
     if (!editor) return;
     
@@ -272,6 +271,12 @@ export default function Editor() {
       });
       return;
     }
+    
+    // 🔥 DEBUG TRACKER ADDED
+    toast.success("Opening comment box...", { 
+      duration: 1500,
+      style: { background: '#18181b', color: '#38bdf8', border: '1px solid #0369a1' } 
+    });
     
     editor.chain().focus().addPendingComment().run();
   };
@@ -431,8 +436,11 @@ export default function Editor() {
           <Toolbar editor={editor} onAskAI={handleAskAI} />
           <FloatingBubbleMenu editor={editor} />
           
-          <FloatingThreads editor={editor} threads={threads} />
-          <FloatingComposer editor={editor} />
+          {/* 🔥 High Z-Index Fix to force Composer over other elements */}
+          <div className="z-[99999] relative">
+            <FloatingThreads editor={editor} threads={threads} className="z-[99999]" />
+            <FloatingComposer editor={editor} className="z-[99999]" />
+          </div>
           
           <EditorContent editor={editor} className="w-full h-full mt-2" />
         </div>

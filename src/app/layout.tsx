@@ -3,7 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Provider } from "./Provider";
-import { Toaster } from "react-hot-toast"; // Added import
+import { Toaster } from "react-hot-toast";
+import "@liveblocks/react-ui/styles.css";
+import "@liveblocks/react-ui/styles/dark/attributes.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
