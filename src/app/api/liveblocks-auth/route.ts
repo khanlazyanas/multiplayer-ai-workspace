@@ -10,14 +10,15 @@ export async function POST(request: Request) {
     const clerkUser = await currentUser();
     const { room } = await request.json();
 
-    // 1. Check if user is logged in or a guest
+    // 1. Identify Guests smoothly without crashing
     const isGuest = !clerkUser;
     const userId = isGuest ? `guest-${Math.random().toString(36).slice(2, 10)}` : clerkUser.id;
 
+    // Optional Chaining (?.) ensures we don't get errors if a user isn't fully set up
     const userInfo = {
-      name: isGuest ? "Guest User" : (clerkUser.firstName || clerkUser.username || "Anonymous User"),
-      email: isGuest ? "" : (clerkUser.emailAddresses?.[0]?.emailAddress || ""),
-      avatar: isGuest ? "" : (clerkUser.imageUrl || ""),
+      name: clerkUser?.firstName || clerkUser?.username || "Guest User",
+      email: clerkUser?.emailAddresses?.[0]?.emailAddress || "",
+      avatar: clerkUser?.imageUrl || "",
       color: ["#F87171", "#60A5FA", "#34D399", "#FBBF24", "#A78BFA"][Math.floor(Math.random() * 5)],
     };
 
@@ -25,27 +26,29 @@ export async function POST(request: Request) {
 
     if (room) {
       try {
-        // 2. Fetch the ACTIVE permissions from Share Modal (Liveblocks Database)
         const roomData = await liveblocks.getRoom(room);
-        const isPubliclyEditable = roomData.defaultAccesses?.includes("room:write");
         
-        // 3. Check if the current user is the VIP Owner
+        // 🔥 THE ULTIMATE FIX: Align Backend Default with Frontend UI Default
+        // If the permissions are untouched (empty), assume it is "Can Edit" because our UI defaults to that!
+        const isUntouched = !roomData.defaultAccesses || roomData.defaultAccesses.length === 0;
+        const isPubliclyEditable = isUntouched || roomData.defaultAccesses.includes("room:write");
+        
         const isExplicitEditor = roomData.usersAccesses?.[userId]?.includes("room:write");
         const isOrphan = !roomData.usersAccesses || Object.keys(roomData.usersAccesses).length === 0;
 
         if (isExplicitEditor || (isOrphan && !isGuest)) {
-          // 🔥 YOU (THE OWNER): Always get FULL ACCESS to your own document
+          // 👑 OWNER: Always gets full editing powers
           session.allow(room, session.FULL_ACCESS);
         } else {
-          // 🔒 GUESTS & FRIENDS: Apply Share Modal Logic Here!
+          // 👨‍💻 GUESTS: Follow the Share Modal Rules perfectly
           if (isPubliclyEditable) {
-            session.allow(room, session.FULL_ACCESS); // If "Can Edit" is selected
+            session.allow(room, session.FULL_ACCESS); // Guest can type
           } else {
-            session.allow(room, session.READ_ACCESS); // If "Can View" is selected
+            session.allow(room, session.READ_ACCESS); // Guest is locked
           }
         }
       } catch (e) {
-        // Room not initialized yet
+        // If the room is not initialized on the server yet
         session.allow(room, session.FULL_ACCESS);
       }
     } else {
