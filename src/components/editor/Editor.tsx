@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension, FloatingComposer, FloatingThreads } from "@liveblocks/react-tiptap";
-// 🔥 Naya Hook Add Hua: useSelf
 import { useStatus, useThreads, useRoom, useSelf } from "@liveblocks/react/suspense"; 
 import Mention from "@tiptap/extension-mention";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
@@ -32,7 +31,7 @@ export default function Editor() {
   const { threads } = useThreads();
   const room = useRoom();
   
-  // 🔥 THE MAGIC LOCK: Ye check karega ki current user likh sakta hai ya nahi
+  // Get current user's write permission strictly from Liveblocks
   const canWrite = useSelf((me) => me.canWrite);
   
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +42,7 @@ export default function Editor() {
 
   const editor = useEditor({
     immediatelyRender: false,
-    editable: canWrite, // 🔥 YAHAN EDITOR FREEZE HO JAYEGA AGAR "READ-ONLY" HUA
+    editable: canWrite, // Initial state
     onUpdate: () => {
       setIsSyncing(true);
     },
@@ -82,7 +81,7 @@ export default function Editor() {
         class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror",
       },
       handleKeyDown: (view, event) => {
-        if (!canWrite) return true; // 🔥 Extra security: Read-only walo ki keyboard keys block
+        if (!canWrite) return true; // Block keyboard entirely for viewers
 
         const isCtrlEnter = event.key === 'Enter' && (event.ctrlKey || event.metaKey);
         const isNormalEnter = event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey;
@@ -150,6 +149,13 @@ export default function Editor() {
     },
   });
 
+  // 🔥 THE ULTIMATE FIX: Dynamically force Tiptap to lock or unlock based on Liveblocks permission
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(canWrite);
+    }
+  }, [editor, canWrite]);
+
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     if (isSyncing) {
@@ -161,7 +167,7 @@ export default function Editor() {
   }, [isSyncing]);
 
   const handleAskAI = () => {
-    if (!editor || !canWrite) return; // 🔥 Double check AI access
+    if (!editor || !canWrite) return;
     const state = editor.state;
     const { $from } = state.selection;
     let userInstruction = $from.parent.textContent.replace(/@AI/g, '').trim();
@@ -295,7 +301,7 @@ export default function Editor() {
   };
 
   const handleAddComment = () => {
-    if (!editor) return;
+    if (!editor || !canWrite) return;
     
     if (editor.state.selection.empty) {
       toast.error("Please highlight text first to comment!", {
@@ -367,7 +373,7 @@ export default function Editor() {
               <select 
                 value={accessType}
                 onChange={(e) => handleUpdateAccess(e.target.value)}
-                disabled={isUpdatingAccess}
+                disabled={isUpdatingAccess || !canWrite}
                 className="bg-zinc-800 text-xs font-semibold text-zinc-200 px-3 py-2 rounded-md border border-zinc-700/80 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 cursor-pointer disabled:opacity-50 transition-all shadow-inner"
               >
                 <option value="write">Can Edit (Full)</option>
@@ -462,22 +468,24 @@ export default function Editor() {
           <ActiveUsers />
           <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
           
-          <button 
-            type="button"
-            onPointerDown={(e) => {
-              e.preventDefault(); 
-              e.stopPropagation();
-            }} 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleAddComment();
-            }} 
-            className="flex items-center gap-1.5 text-xs font-semibold bg-sky-600/90 hover:bg-sky-500 text-white px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(2,132,199,0.3)] transition-all"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            Comment
-          </button>
+          {canWrite && (
+            <button 
+              type="button"
+              onPointerDown={(e) => {
+                e.preventDefault(); 
+                e.stopPropagation();
+              }} 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAddComment();
+              }} 
+              className="flex items-center gap-1.5 text-xs font-semibold bg-sky-600/90 hover:bg-sky-500 text-white px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(2,132,199,0.3)] transition-all"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              Comment
+            </button>
+          )}
           
           <button onClick={() => setIsShareModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95">Share</button>
           <button onClick={exportDocumentPDF} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">PDF</button>
@@ -489,7 +497,6 @@ export default function Editor() {
         <DocumentHeader />
         
         <div className="p-5 md:p-10 max-w-4xl mx-auto w-full relative lb-root lb-dark">
-          {/* 🔥 AI TOOLBAR GAYAB AGAR READ-ONLY HAI */}
           {canWrite && <Toolbar editor={editor} onAskAI={handleAskAI} />}
           {canWrite && <FloatingBubbleMenu editor={editor} />}
           
