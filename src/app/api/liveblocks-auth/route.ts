@@ -10,11 +10,10 @@ export async function POST(request: Request) {
     const clerkUser = await currentUser();
     const { room } = await request.json();
 
-    // 1. Identify if the user is a Guest (not logged in via Clerk)
+    // 1. Check if user is logged in or a guest
     const isGuest = !clerkUser;
     const userId = isGuest ? `guest-${Math.random().toString(36).slice(2, 10)}` : clerkUser.id;
 
-    // 2. Assign appropriate user information for the Liveblocks session
     const userInfo = {
       name: isGuest ? "Guest User" : (clerkUser.firstName || clerkUser.username || "Anonymous User"),
       email: isGuest ? "" : (clerkUser.emailAddresses?.[0]?.emailAddress || ""),
@@ -26,38 +25,31 @@ export async function POST(request: Request) {
 
     if (room) {
       try {
-        // 3. Fetch current room settings
+        // 2. Fetch the ACTIVE permissions from Share Modal (Liveblocks Database)
         const roomData = await liveblocks.getRoom(room);
         const isPubliclyEditable = roomData.defaultAccesses?.includes("room:write");
-
-        // 4. THE BULLETPROOF OWNER CHECK
-        let isOwner = false;
         
-        if (clerkUser) {
-          // Check if the user is explicitly set as the owner in the room's access list
-          const hasExplicitAccess = roomData.usersAccesses?.[clerkUser.id]?.includes("room:write");
-          
-          // Fallback: If the room was created without assigning an owner (Orphan Room),
-          // we assume the logged-in Clerk user is the owner to prevent accidental lockouts.
-          const isRoomOrphaned = !roomData.usersAccesses || Object.keys(roomData.usersAccesses).length === 0;
-          
-          isOwner = hasExplicitAccess || isRoomOrphaned;
-        }
+        // 3. Check if the current user is the VIP Owner
+        const isExplicitEditor = roomData.usersAccesses?.[userId]?.includes("room:write");
+        const isOrphan = !roomData.usersAccesses || Object.keys(roomData.usersAccesses).length === 0;
 
-        if (isOwner) {
-          // 5. The Owner NEVER gets locked out, regardless of the Share Modal settings
+        if (isExplicitEditor || (isOrphan && !isGuest)) {
+          // 🔥 YOU (THE OWNER): Always get FULL ACCESS to your own document
           session.allow(room, session.FULL_ACCESS);
         } else {
-          // 6. Guests and other non-owner users must respect the Share Modal permissions
-          session.allow(room, isPubliclyEditable ? session.FULL_ACCESS : session.READ_ACCESS);
+          // 🔒 GUESTS & FRIENDS: Apply Share Modal Logic Here!
+          if (isPubliclyEditable) {
+            session.allow(room, session.FULL_ACCESS); // If "Can Edit" is selected
+          } else {
+            session.allow(room, session.READ_ACCESS); // If "Can View" is selected
+          }
         }
       } catch (e) {
-        // 7. If the room does not exist yet (during initial creation)
+        // Room not initialized yet
         session.allow(room, session.FULL_ACCESS);
       }
     } else {
-      // 8. Fallback for generic wildcard authorization
-      session.allow("*", session.FULL_ACCESS);
+      session.allow("*", session.READ_ACCESS);
     }
 
     const { status, body } = await session.authorize();
