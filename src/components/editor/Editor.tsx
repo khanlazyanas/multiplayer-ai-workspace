@@ -149,7 +149,7 @@ export default function Editor() {
     },
   });
 
-  // 🔥 THE ULTIMATE FIX: Dynamically force Tiptap to lock or unlock based on Liveblocks permission
+  // Dynamically force Tiptap to lock or unlock based on Liveblocks permission
   useEffect(() => {
     if (editor) {
       editor.setEditable(canWrite);
@@ -287,10 +287,16 @@ export default function Editor() {
       
       if (!res.ok) throw new Error("Failed to sync with backend");
       
-      toast.success(`Access updated: Anyone with link can ${newAccess === 'write' ? 'edit' : 'view'}`, { 
+      toast.success(`Access updated! Reloading to apply changes...`, { 
         id: toastId,
         style: { background: '#18181b', color: '#34d399', border: '1px solid #059669' }
       });
+
+      // Force page reload to invalidate Liveblocks cache and apply new tokens globally
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+
     } catch (error) {
       console.error(error);
       toast.error("Failed to update access", { id: toastId });
