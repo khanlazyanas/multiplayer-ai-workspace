@@ -8,52 +8,45 @@ const liveblocks = new Liveblocks({
 export async function POST(request: Request) {
   try {
     const clerkUser = await currentUser();
-
-    if (!clerkUser) {
-      return new Response("Unauthorized", { status: 401 });
-    }
-
-    // 1. Extract the requested room ID from the frontend request
     const { room } = await request.json();
 
+    // 1. Check if the user is logged in via Clerk, otherwise assign as a Guest
+    // This prevents the mobile white-screen crash by allowing anonymous users
+    const isGuest = !clerkUser;
+    const userId = isGuest ? `guest-${Math.random().toString(36).slice(2, 10)}` : clerkUser.id;
+
+    // 2. Generate generic info for guests, and real info for logged-in users
     const userInfo = {
-      name: clerkUser.firstName || clerkUser.username || "Anonymous User",
-      email: clerkUser.emailAddresses?.[0]?.emailAddress || "",
-      avatar: clerkUser.imageUrl || "",
+      name: isGuest ? "Guest User" : (clerkUser.firstName || clerkUser.username || "Anonymous User"),
+      email: isGuest ? "" : (clerkUser.emailAddresses?.[0]?.emailAddress || ""),
+      avatar: isGuest ? "" : (clerkUser.imageUrl || ""),
       color: ["#F87171", "#60A5FA", "#34D399", "#FBBF24", "#A78BFA"][Math.floor(Math.random() * 5)],
     };
 
-    const session = liveblocks.prepareSession(
-      clerkUser.id,
-      { userInfo } 
-    );
+    const session = liveblocks.prepareSession(userId, { userInfo });
 
     if (room) {
       try {
-        // 2. Fetch the current room settings from the Liveblocks server
+        // 3. Fetch the current room settings from the Liveblocks server
         const roomData = await liveblocks.getRoom(room);
-        
-        // 3. Check if the room's default public access allows editing
         const isPubliclyEditable = roomData.defaultAccesses?.includes("room:write");
-        
-        // 4. Check if the current user is an explicit owner/editor of this room
-        // (The creator's ID is typically stored in usersAccesses)
-        const isOwnerOrEditor = roomData.usersAccesses?.[clerkUser.id]?.includes("room:write");
 
-        if (isOwnerOrEditor || isPubliclyEditable) {
-          // Grant FULL_ACCESS if the room is publicly editable or the user is an owner/editor
-          session.allow(room, session.FULL_ACCESS);
+        if (isGuest) {
+          // 4. If it is a guest (e.g., opening link on mobile without login)
+          // Strictly apply the Share Modal rules (Edit or View-Only)
+          session.allow(room, isPubliclyEditable ? session.FULL_ACCESS : session.READ_ACCESS);
         } else {
-          // Otherwise, restrict to READ_ACCESS (Applying Share Modal RBAC)
-          session.allow(room, session.READ_ACCESS);
+          // 5. If you are a logged-in Clerk user, ALWAYS grant FULL_ACCESS
+          // This ensures you are never locked out of your own workspace
+          session.allow(room, session.FULL_ACCESS);
         }
       } catch (e) {
-        // Room is not yet created on the server (First time load scenario)
+        // Room not found on server yet, grant full access to initialize
         session.allow(room, session.FULL_ACCESS);
       }
     } else {
-      // Fallback to read-only for unknown requests
-      session.allow("*", session.READ_ACCESS);
+      // Fallback permission
+      session.allow("*", session.FULL_ACCESS);
     }
 
     const { status, body } = await session.authorize();
@@ -65,7 +58,7 @@ export async function POST(request: Request) {
     
   } catch (error) {
     console.error("Liveblocks auth error:", error);
-    return new Response(JSON.stringify({ error: "Auth failed" }), { 
+    return new Response(JSON.stringify({ error: "Auth process failed" }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
