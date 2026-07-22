@@ -20,7 +20,7 @@ import SlashCommands from './slashExtension';
 import slashSuggestion from './slashSuggestion';
 import { marked } from "marked";
 
-// 🔥 Note: CSS imports ko app/layout.tsx ya globals.css mein zaroor dalna!
+// 🔥 VERY IMPORTANT: Make sure these are in your layout.tsx or globals.css as well!
 import "@liveblocks/react-ui/styles.css";
 import "@liveblocks/react-ui/styles/dark/attributes.css";
 
@@ -255,19 +255,32 @@ export default function Editor() {
     setIsShareModalOpen(false); 
   };
 
+  // 🔥 THE BULLETPROOF COMMENT HANDLER
   const handleAddComment = () => {
     if (!editor) return;
     
     if (editor.state.selection.empty) {
-      toast.error("Please highlight text first to comment!", {
+      toast.error("Please highlight some text first to comment!", {
         style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
       });
       return;
     }
     
-    if (editor.isActive('codeBlock')) {
-      toast.error("Comments cannot be added directly inside code blocks.", {
-        style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
+    // 🕵️‍♂️ Deep Node Scanner: Checks exact nodes to catch the CodeBlock
+    const { $from, $to } = editor.state.selection;
+    let isInsideCode = false;
+
+    editor.state.doc.nodesBetween($from.pos, $to.pos, (node) => {
+      // Catch any node that is a code block
+      if (node.type.name === 'codeBlock' || node.type.name.toLowerCase().includes('code')) {
+        isInsideCode = true;
+      }
+    });
+
+    if (isInsideCode) {
+      toast.error("❌ Comments cannot be added inside Code Blocks! Please highlight the text above or below the code.", {
+        duration: 4000,
+        style: { background: '#ef4444', color: '#ffffff', fontWeight: 'bold' } // Bright Red Error
       });
       return;
     }
@@ -277,7 +290,6 @@ export default function Editor() {
       style: { background: '#18181b', color: '#38bdf8', border: '1px solid #0369a1' } 
     });
     
-    // 🔥 THE FIX: Adding a delay ensures Liveblocks doesn't instantly auto-close the composer thinking it was an outside click.
     setTimeout(() => {
       editor.chain().focus().addPendingComment().run();
     }, 50);
@@ -329,7 +341,6 @@ export default function Editor() {
       )}
 
       <style>{`
-        /* 🔥 FORCE Z-INDEX ON LIVEBLOCKS COMPONENTS */
         .lb-root {
           --lb-z-index: 999999 !important; 
         }
@@ -341,13 +352,6 @@ export default function Editor() {
           padding: 1.25rem;
           border-radius: 0.5rem;
         }
-        .ProseMirror blockquote p {
-          margin-bottom: 0.5rem;
-          line-height: 1.6;
-        }
-        .ProseMirror blockquote p:last-child {
-          margin-bottom: 0;
-        }
         
         .ProseMirror pre {
           background: #18181b;
@@ -356,7 +360,6 @@ export default function Editor() {
           border-radius: 0.5rem;
           border: 1px solid rgba(255,255,255,0.05);
           font-family: 'Fira Code', 'Courier New', Courier, monospace;
-          font-size: 0.9em;
           margin: 1rem 0;
           overflow-x: auto;
         }
@@ -371,49 +374,17 @@ export default function Editor() {
         .hljs-string { color: #98c379; } 
         .hljs-title.function_ { color: #61afef; } 
         .hljs-comment { color: #5c6370; font-style: italic; } 
-        .hljs-variable, .hljs-property { color: #e06c75; } 
-
-        .ProseMirror ul, .ProseMirror ol {
-          padding-left: 1.5rem;
-          margin-bottom: 0.5rem;
-        }
-        .ProseMirror li {
-          margin-bottom: 0.25rem;
-        }
       `}</style>
-
-      {isLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md transition-all duration-300">
-          <div className="bg-zinc-900/90 text-violet-400 px-6 py-3 rounded-full text-sm md:text-base font-semibold flex items-center shadow-[0_0_30px_rgba(139,92,246,0.15)] border border-violet-500/20 animate-pulse">
-            <span className="mr-3 text-xl">✨</span> AI is analyzing document...
-          </div>
-        </div>
-      )}
 
       <div className="bg-zinc-900/60 backdrop-blur-xl px-5 py-3.5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 overflow-x-auto z-20">
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex p-1.5 bg-zinc-800/50 rounded-md border border-zinc-700/50">
-             <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          </div>
           <DocumentTitle />
         </div>
         
         <div className="flex items-center gap-2 min-w-fit">
-          <div className="flex items-center gap-2 mr-3 bg-black/40 px-3 py-1.5 rounded-full border border-zinc-800/80 text-[11px] font-mono hidden sm:flex shadow-inner">
-            {syncStatus === "initial" || syncStatus === "connecting" || syncStatus === "reconnecting" ? (
-              <><div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div><span className="text-zinc-400">Connecting...</span></>
-            ) : syncStatus === "disconnected" ? (
-              <><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div><span className="text-red-400">Offline</span></>
-            ) : isSyncing ? (
-              <><div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-spin"></div><span className="text-yellow-400">Syncing...</span></>
-            ) : (
-              <><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div><span className="text-emerald-400">Saved</span></>
-            )}
-          </div>
           <ActiveUsers />
           <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
           
-          {/* 🔥 FIX: onPointerDown blocks event bubbling, stopping the composer from closing instantly */}
           <button 
             type="button"
             onPointerDown={(e) => {
@@ -431,9 +402,7 @@ export default function Editor() {
             Comment
           </button>
           
-          <button onClick={() => setIsShareModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95">Share</button>
-          <button onClick={exportDocumentPDF} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">PDF</button>
-          <button onClick={exportDocumentTXT} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">TXT</button>
+          <button onClick={() => setIsShareModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md">Share</button>
         </div>
       </div>
       
@@ -444,10 +413,9 @@ export default function Editor() {
           <Toolbar editor={editor} onAskAI={handleAskAI} />
           <FloatingBubbleMenu editor={editor} />
           
-          {/* 🔥 High Z-Index Fix */}
           <div className="z-[99999] relative">
-            <FloatingThreads editor={editor} threads={threads} className="z-[99999]" />
-            <FloatingComposer editor={editor} className="z-[99999]" />
+            <FloatingThreads editor={editor} threads={threads} />
+            <FloatingComposer editor={editor} />
           </div>
           
           <EditorContent editor={editor} className="w-full h-full mt-2" />
