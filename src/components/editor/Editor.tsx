@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension, FloatingComposer, FloatingThreads } from "@liveblocks/react-tiptap";
-import { useStatus, useThreads } from "@liveblocks/react/suspense"; 
+// 🔥 Naya Hook Add Hua: useRoom
+import { useStatus, useThreads, useRoom } from "@liveblocks/react/suspense"; 
 import Mention from "@tiptap/extension-mention";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
@@ -20,7 +21,6 @@ import SlashCommands from './slashExtension';
 import slashSuggestion from './slashSuggestion';
 import { marked } from "marked";
 
-// 🔥 VERY IMPORTANT: Make sure these are in your layout.tsx or globals.css as well!
 import "@liveblocks/react-ui/styles.css";
 import "@liveblocks/react-ui/styles/dark/attributes.css";
 
@@ -30,10 +30,16 @@ export default function Editor() {
   const liveblocks = useLiveblocksExtension();
   const syncStatus = useStatus(); 
   const { threads } = useThreads();
+  // 🔥 Current Room Access karne ke liye
+  const room = useRoom();
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  
+  // 🔥 Permission System States
+  const [accessType, setAccessType] = useState("write"); 
+  const [isUpdatingAccess, setIsUpdatingAccess] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -255,32 +261,50 @@ export default function Editor() {
     setIsShareModalOpen(false); 
   };
 
-  // 🔥 THE BULLETPROOF COMMENT HANDLER
+  // 🔥 THE MAGIC: Permission Update Handler
+  const handleUpdateAccess = async (newAccess: string) => {
+    setAccessType(newAccess);
+    setIsUpdatingAccess(true);
+    
+    const toastId = toast.loading("Updating workspace permissions...", {
+      style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
+    });
+    
+    try {
+      const res = await fetch('/api/room/update-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId: room.id, accessType: newAccess })
+      });
+      
+      if (!res.ok) throw new Error("Failed to sync with backend");
+      
+      toast.success(`Access updated: Anyone with link can ${newAccess === 'write' ? 'edit' : 'view'}`, { 
+        id: toastId,
+        style: { background: '#18181b', color: '#34d399', border: '1px solid #059669' }
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update access", { id: toastId });
+      setAccessType(accessType === "write" ? "read" : "write"); // Rollback UI if failed
+    } finally {
+      setIsUpdatingAccess(false);
+    }
+  };
+
   const handleAddComment = () => {
     if (!editor) return;
     
     if (editor.state.selection.empty) {
-      toast.error("Please highlight some text first to comment!", {
+      toast.error("Please highlight text first to comment!", {
         style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
       });
       return;
     }
     
-    // 🕵️‍♂️ Deep Node Scanner: Checks exact nodes to catch the CodeBlock
-    const { $from, $to } = editor.state.selection;
-    let isInsideCode = false;
-
-    editor.state.doc.nodesBetween($from.pos, $to.pos, (node) => {
-      // Catch any node that is a code block
-      if (node.type.name === 'codeBlock' || node.type.name.toLowerCase().includes('code')) {
-        isInsideCode = true;
-      }
-    });
-
-    if (isInsideCode) {
-      toast.error("❌ Comments cannot be added inside Code Blocks! Please highlight the text above or below the code.", {
-        duration: 4000,
-        style: { background: '#ef4444', color: '#ffffff', fontWeight: 'bold' } // Bright Red Error
+    if (editor.isActive('codeBlock')) {
+      toast.error("Comments cannot be added directly inside code blocks.", {
+        style: { background: '#18181b', color: '#e4e4e7', border: '1px solid #27272a' }
       });
       return;
     }
@@ -300,6 +324,7 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
+      {/* 🔥 THE PRO SHARE MODAL WITH RBAC */}
       {isShareModalOpen && (
         <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
@@ -328,13 +353,26 @@ export default function Editor() {
             </div>
 
             <div className="bg-[#121214] px-6 py-4 border-t border-zinc-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 border border-violet-500/30">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 border border-violet-500/30">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 </div>
-                <span className="text-sm font-medium text-zinc-300">Liveblocks Users</span>
+                <div>
+                  <span className="text-sm font-medium text-zinc-300 block">Anyone with link</span>
+                  <span className="text-[11px] text-zinc-500 block">Control what guests can do</span>
+                </div>
               </div>
-              <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">Full Access</span>
+              
+              {/* 🔥 Role Selection Dropdown */}
+              <select 
+                value={accessType}
+                onChange={(e) => handleUpdateAccess(e.target.value)}
+                disabled={isUpdatingAccess}
+                className="bg-zinc-800 text-xs font-semibold text-zinc-200 px-3 py-2 rounded-md border border-zinc-700/80 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 cursor-pointer disabled:opacity-50 transition-all shadow-inner"
+              >
+                <option value="write">Can Edit (Full)</option>
+                <option value="read">Can View (Read-Only)</option>
+              </select>
             </div>
           </div>
         </div>
@@ -352,6 +390,13 @@ export default function Editor() {
           padding: 1.25rem;
           border-radius: 0.5rem;
         }
+        .ProseMirror blockquote p {
+          margin-bottom: 0.5rem;
+          line-height: 1.6;
+        }
+        .ProseMirror blockquote p:last-child {
+          margin-bottom: 0;
+        }
         
         .ProseMirror pre {
           background: #18181b;
@@ -360,6 +405,7 @@ export default function Editor() {
           border-radius: 0.5rem;
           border: 1px solid rgba(255,255,255,0.05);
           font-family: 'Fira Code', 'Courier New', Courier, monospace;
+          font-size: 0.9em;
           margin: 1rem 0;
           overflow-x: auto;
         }
@@ -374,14 +420,45 @@ export default function Editor() {
         .hljs-string { color: #98c379; } 
         .hljs-title.function_ { color: #61afef; } 
         .hljs-comment { color: #5c6370; font-style: italic; } 
+        .hljs-variable, .hljs-property { color: #e06c75; } 
+
+        .ProseMirror ul, .ProseMirror ol {
+          padding-left: 1.5rem;
+          margin-bottom: 0.5rem;
+        }
+        .ProseMirror li {
+          margin-bottom: 0.25rem;
+        }
       `}</style>
+
+      {isLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md transition-all duration-300">
+          <div className="bg-zinc-900/90 text-violet-400 px-6 py-3 rounded-full text-sm md:text-base font-semibold flex items-center shadow-[0_0_30px_rgba(139,92,246,0.15)] border border-violet-500/20 animate-pulse">
+            <span className="mr-3 text-xl">✨</span> AI is analyzing document...
+          </div>
+        </div>
+      )}
 
       <div className="bg-zinc-900/60 backdrop-blur-xl px-5 py-3.5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 overflow-x-auto z-20">
         <div className="flex items-center gap-3">
+          <div className="hidden sm:flex p-1.5 bg-zinc-800/50 rounded-md border border-zinc-700/50">
+             <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
           <DocumentTitle />
         </div>
         
         <div className="flex items-center gap-2 min-w-fit">
+          <div className="flex items-center gap-2 mr-3 bg-black/40 px-3 py-1.5 rounded-full border border-zinc-800/80 text-[11px] font-mono hidden sm:flex shadow-inner">
+            {syncStatus === "initial" || syncStatus === "connecting" || syncStatus === "reconnecting" ? (
+              <><div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div><span className="text-zinc-400">Connecting...</span></>
+            ) : syncStatus === "disconnected" ? (
+              <><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div><span className="text-red-400">Offline</span></>
+            ) : isSyncing ? (
+              <><div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-spin"></div><span className="text-yellow-400">Syncing...</span></>
+            ) : (
+              <><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div><span className="text-emerald-400">Saved</span></>
+            )}
+          </div>
           <ActiveUsers />
           <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
           
@@ -402,7 +479,9 @@ export default function Editor() {
             Comment
           </button>
           
-          <button onClick={() => setIsShareModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md">Share</button>
+          <button onClick={() => setIsShareModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95">Share</button>
+          <button onClick={exportDocumentPDF} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">PDF</button>
+          <button onClick={exportDocumentTXT} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">TXT</button>
         </div>
       </div>
       
@@ -414,8 +493,8 @@ export default function Editor() {
           <FloatingBubbleMenu editor={editor} />
           
           <div className="z-[99999] relative">
-            <FloatingThreads editor={editor} threads={threads} />
-            <FloatingComposer editor={editor} />
+            <FloatingThreads editor={editor} threads={threads} className="z-[99999]" />
+            <FloatingComposer editor={editor} className="z-[99999]" />
           </div>
           
           <EditorContent editor={editor} className="w-full h-full mt-2" />
