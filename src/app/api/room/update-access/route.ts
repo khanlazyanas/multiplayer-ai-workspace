@@ -1,6 +1,6 @@
 import { Liveblocks } from "@liveblocks/node";
 import { NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server"; // 🔥 Added Clerk to identify you
+import { auth } from "@clerk/nextjs/server"; 
 
 const liveblocks = new Liveblocks({
   secret: process.env.LIVEBLOCKS_SECRET_KEY as string,
@@ -8,9 +8,10 @@ const liveblocks = new Liveblocks({
 
 export async function POST(req: Request) {
   try {
-    // 1. Get the current logged-in user (You)
-    const user = await currentUser();
-    if (!user) {
+    // FIX: Added 'await' because auth() returns a Promise in newer Clerk versions
+    const { userId } = await auth(); 
+    
+    if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -20,20 +21,20 @@ export async function POST(req: Request) {
       return new NextResponse("Missing parameters", { status: 400 });
     }
 
-    // 2. Decide the public link access
+    // Determine permissions for guests based on the selected access type
     const defaultAccesses = accessType === "write" 
       ? ["room:write"] 
       : ["room:read", "room:presence:write"];
 
-    // 3. THE ULTIMATE FIX: Update the room AND explicitly add your ID as the VIP Editor!
-    const updatedRoom = await liveblocks.updateRoom(roomId, {
+    // Force save the current user as the explicit owner to prevent lockouts
+    await liveblocks.updateRoom(roomId, {
       defaultAccesses: defaultAccesses as any,
       usersAccesses: {
-        [user.id]: ["room:write"], // 🔥 You will NEVER get locked out now!
+        [userId]: ["room:write"], 
       } as any,
     });
 
-    return NextResponse.json(updatedRoom);
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error updating room access:", error);
     return new NextResponse("Internal Error", { status: 500 });

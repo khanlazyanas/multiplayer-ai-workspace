@@ -1,4 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { Liveblocks } from "@liveblocks/node";
 
 const liveblocks = new Liveblocks({
@@ -7,49 +7,46 @@ const liveblocks = new Liveblocks({
 
 export async function POST(request: Request) {
   try {
-    const clerkUser = await currentUser();
+    // FIX: Added 'await' before auth() to resolve the Promise
+    const { userId: clerkId } = await auth(); 
+    const user = clerkId ? await currentUser() : null; 
     const { room } = await request.json();
 
-    // 1. Identify User (Clerk Logged in OR Mobile Guest)
-    const isGuest = !clerkUser;
-    const userId = isGuest ? `guest-${Math.random().toString(36).slice(2, 10)}` : clerkUser.id;
+    // Differentiate between authenticated owners and anonymous mobile guests
+    const isGuest = !clerkId;
+    const liveblocksUserId = isGuest ? `guest-${Math.random().toString(36).slice(2, 10)}` : clerkId;
 
     const userInfo = {
-      name: clerkUser?.firstName || clerkUser?.username || "Guest User",
-      email: clerkUser?.emailAddresses?.[0]?.emailAddress || "",
-      avatar: clerkUser?.imageUrl || "",
+      name: user?.firstName || user?.username || (isGuest ? "Guest User" : "Anonymous"),
+      email: user?.emailAddresses?.[0]?.emailAddress || "",
+      avatar: user?.imageUrl || "",
       color: ["#F87171", "#60A5FA", "#34D399", "#FBBF24", "#A78BFA"][Math.floor(Math.random() * 5)],
     };
 
-    const session = liveblocks.prepareSession(userId, { userInfo });
+    const session = liveblocks.prepareSession(liveblocksUserId, { userInfo });
 
     if (room) {
-      try {
-        const roomData = await liveblocks.getRoom(room);
-        
-        // 2. Safely get current room permissions
+      // Safely fetch room data; if it fails, roomData will be null
+      const roomData = await liveblocks.getRoom(room).catch(() => null);
+
+      if (roomData) {
         const defaultAccesses = roomData.defaultAccesses || [];
         const usersAccesses = roomData.usersAccesses || {};
 
-        // 3. THE 3 GOLDEN RULES (Mathematical Checks)
-        // Rule A: Kya ye user is room ka VIP Owner hai?
-        const isOwner = usersAccesses[userId]?.includes("room:write");
-        
-        // Rule B: Kya ye ekdum naya room hai jisme abhi tak Share button use nahi hua?
-        const isRoomEmpty = defaultAccesses.length === 0 && Object.keys(usersAccesses).length === 0;
-        
-        // Rule C: Kya Share modal se "Can Edit" select kiya gaya hai?
+        // Verify access rules
+        const isOwner = usersAccesses[liveblocksUserId]?.includes("room:write");
+        const isVirginRoom = defaultAccesses.length === 0 && Object.keys(usersAccesses).length === 0;
         const isPublicEdit = defaultAccesses.includes("room:write");
 
-        // 4. Decision Time:
-        if (isOwner || isRoomEmpty || isPublicEdit) {
-          session.allow(room, session.FULL_ACCESS); // Type karne do
+        if (isOwner || isVirginRoom || isPublicEdit) {
+          // Grant full access to owners and users in public edit rooms
+          session.allow(room, session.FULL_ACCESS);
         } else {
-          session.allow(room, session.READ_ACCESS); // Strictly lock kar do
+          // Restrict guests to read-only access
+          session.allow(room, session.READ_ACCESS);
         }
-        
-      } catch (e) {
-        // Room agar server par nahi bani hai toh initialize karne do
+      } else {
+        // Allow access to initialize the room if it doesn't exist yet
         session.allow(room, session.FULL_ACCESS);
       }
     } else {
@@ -65,9 +62,6 @@ export async function POST(request: Request) {
     
   } catch (error) {
     console.error("Liveblocks auth error:", error);
-    return new Response(JSON.stringify({ error: "Auth process failed" }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(JSON.stringify({ error: "Auth process failed" }), { status: 500 });
   }
 }
