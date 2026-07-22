@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension, FloatingComposer, FloatingThreads } from "@liveblocks/react-tiptap";
-// 🔥 Naya Hook Add Hua: useRoom
-import { useStatus, useThreads, useRoom } from "@liveblocks/react/suspense"; 
+// 🔥 Naya Hook Add Hua: useSelf
+import { useStatus, useThreads, useRoom, useSelf } from "@liveblocks/react/suspense"; 
 import Mention from "@tiptap/extension-mention";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
@@ -30,19 +30,20 @@ export default function Editor() {
   const liveblocks = useLiveblocksExtension();
   const syncStatus = useStatus(); 
   const { threads } = useThreads();
-  // 🔥 Current Room Access karne ke liye
   const room = useRoom();
+  
+  // 🔥 THE MAGIC LOCK: Ye check karega ki current user likh sakta hai ya nahi
+  const canWrite = useSelf((me) => me.canWrite);
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  
-  // 🔥 Permission System States
   const [accessType, setAccessType] = useState("write"); 
   const [isUpdatingAccess, setIsUpdatingAccess] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
+    editable: canWrite, // 🔥 YAHAN EDITOR FREEZE HO JAYEGA AGAR "READ-ONLY" HUA
     onUpdate: () => {
       setIsSyncing(true);
     },
@@ -81,6 +82,8 @@ export default function Editor() {
         class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror",
       },
       handleKeyDown: (view, event) => {
+        if (!canWrite) return true; // 🔥 Extra security: Read-only walo ki keyboard keys block
+
         const isCtrlEnter = event.key === 'Enter' && (event.ctrlKey || event.metaKey);
         const isNormalEnter = event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey;
 
@@ -158,7 +161,7 @@ export default function Editor() {
   }, [isSyncing]);
 
   const handleAskAI = () => {
-    if (!editor) return;
+    if (!editor || !canWrite) return; // 🔥 Double check AI access
     const state = editor.state;
     const { $from } = state.selection;
     let userInstruction = $from.parent.textContent.replace(/@AI/g, '').trim();
@@ -261,7 +264,6 @@ export default function Editor() {
     setIsShareModalOpen(false); 
   };
 
-  // 🔥 THE MAGIC: Permission Update Handler
   const handleUpdateAccess = async (newAccess: string) => {
     setAccessType(newAccess);
     setIsUpdatingAccess(true);
@@ -286,7 +288,7 @@ export default function Editor() {
     } catch (error) {
       console.error(error);
       toast.error("Failed to update access", { id: toastId });
-      setAccessType(accessType === "write" ? "read" : "write"); // Rollback UI if failed
+      setAccessType(accessType === "write" ? "read" : "write"); 
     } finally {
       setIsUpdatingAccess(false);
     }
@@ -324,7 +326,6 @@ export default function Editor() {
   return (
     <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
       
-      {/* 🔥 THE PRO SHARE MODAL WITH RBAC */}
       {isShareModalOpen && (
         <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
@@ -363,7 +364,6 @@ export default function Editor() {
                 </div>
               </div>
               
-              {/* 🔥 Role Selection Dropdown */}
               <select 
                 value={accessType}
                 onChange={(e) => handleUpdateAccess(e.target.value)}
@@ -489,8 +489,9 @@ export default function Editor() {
         <DocumentHeader />
         
         <div className="p-5 md:p-10 max-w-4xl mx-auto w-full relative lb-root lb-dark">
-          <Toolbar editor={editor} onAskAI={handleAskAI} />
-          <FloatingBubbleMenu editor={editor} />
+          {/* 🔥 AI TOOLBAR GAYAB AGAR READ-ONLY HAI */}
+          {canWrite && <Toolbar editor={editor} onAskAI={handleAskAI} />}
+          {canWrite && <FloatingBubbleMenu editor={editor} />}
           
           <div className="z-[99999] relative">
             <FloatingThreads editor={editor} threads={threads} className="z-[99999]" />

@@ -1,13 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useStorage, useMutation } from "@liveblocks/react/suspense";
+// 🔥 Add useSelf here to check permissions
+import { useStorage, useMutation, useSelf } from "@liveblocks/react/suspense";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 
 export const DocumentTitle = ({ initialTitle }: { initialTitle?: string }) => {
   const roomTitle = useStorage((root: any) => root.title) || initialTitle || "Untitled Workspace";
   const params = useParams(); // URL se roomId nikalne ke liye
+  
+  // 🔥 THE LOCK: Check if the current user has write access
+  const canWrite = useSelf((me) => me.canWrite);
   
   const [isEditing, setIsEditing] = useState(false);
   const [localTitle, setLocalTitle] = useState(roomTitle);
@@ -66,7 +70,7 @@ export const DocumentTitle = ({ initialTitle }: { initialTitle?: string }) => {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
       
-      {isEditing ? (
+      {isEditing && canWrite ? (
         <input
           ref={inputRef}
           value={localTitle}
@@ -83,9 +87,15 @@ export const DocumentTitle = ({ initialTitle }: { initialTitle?: string }) => {
         />
       ) : (
         <span
-          onClick={() => setIsEditing(true)}
-          className="cursor-pointer hover:text-sky-400 hover:bg-sky-500/10 px-1 rounded transition-colors"
-          title="Click to rename document"
+          onClick={() => {
+            if (canWrite) setIsEditing(true); // 🔥 Sirf tabhi edit mode on hoga jab canWrite true ho
+          }}
+          className={`px-1 rounded transition-colors ${
+            canWrite 
+              ? "cursor-pointer hover:text-sky-400 hover:bg-sky-500/10" // Edit walo ke liye UI
+              : "cursor-default opacity-80" // Read-only walo ke liye UI
+          }`}
+          title={canWrite ? "Click to rename document" : "View Only (Cannot edit title)"}
         >
           {roomTitle}
         </span>
