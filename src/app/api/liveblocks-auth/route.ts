@@ -10,11 +10,10 @@ export async function POST(request: Request) {
     const clerkUser = await currentUser();
     const { room } = await request.json();
 
-    // 1. Support for mobile users who are not logged in (Guests)
+    // 1. Identify User (Clerk Logged in OR Mobile Guest)
     const isGuest = !clerkUser;
     const userId = isGuest ? `guest-${Math.random().toString(36).slice(2, 10)}` : clerkUser.id;
 
-    // 2. Setup user profile (handles both logged-in and guest users safely)
     const userInfo = {
       name: clerkUser?.firstName || clerkUser?.username || "Guest User",
       email: clerkUser?.emailAddresses?.[0]?.emailAddress || "",
@@ -22,34 +21,35 @@ export async function POST(request: Request) {
       color: ["#F87171", "#60A5FA", "#34D399", "#FBBF24", "#A78BFA"][Math.floor(Math.random() * 5)],
     };
 
-    // 3. Prepare the smart Access Token session
     const session = liveblocks.prepareSession(userId, { userInfo });
 
     if (room) {
       try {
         const roomData = await liveblocks.getRoom(room);
         
-        // 4. Align Backend Default with Frontend UI
-        // If the permissions are untouched (empty), assume "Can Edit" because our UI defaults to that!
-        const isUntouched = !roomData.defaultAccesses || roomData.defaultAccesses.length === 0;
-        const isPubliclyEditable = isUntouched || roomData.defaultAccesses.includes("room:write");
-        
-        const isExplicitEditor = roomData.usersAccesses?.[userId]?.includes("room:write");
-        const isOrphan = !roomData.usersAccesses || Object.keys(roomData.usersAccesses).length === 0;
+        // 2. Safely get current room permissions
+        const defaultAccesses = roomData.defaultAccesses || [];
+        const usersAccesses = roomData.usersAccesses || {};
 
-        if (isExplicitEditor || (isOrphan && !isGuest)) {
-          // 👑 YOU (OWNER): Always gets full editing powers
-          session.allow(room, session.FULL_ACCESS);
+        // 3. THE 3 GOLDEN RULES (Mathematical Checks)
+        // Rule A: Kya ye user is room ka VIP Owner hai?
+        const isOwner = usersAccesses[userId]?.includes("room:write");
+        
+        // Rule B: Kya ye ekdum naya room hai jisme abhi tak Share button use nahi hua?
+        const isRoomEmpty = defaultAccesses.length === 0 && Object.keys(usersAccesses).length === 0;
+        
+        // Rule C: Kya Share modal se "Can Edit" select kiya gaya hai?
+        const isPublicEdit = defaultAccesses.includes("room:write");
+
+        // 4. Decision Time:
+        if (isOwner || isRoomEmpty || isPublicEdit) {
+          session.allow(room, session.FULL_ACCESS); // Type karne do
         } else {
-          // 📱 GUESTS (Mobile & Friends): Follow the Share Modal Rules perfectly
-          if (isPubliclyEditable) {
-            session.allow(room, session.FULL_ACCESS); // Guest can type
-          } else {
-            session.allow(room, session.READ_ACCESS); // Guest is strictly locked
-          }
+          session.allow(room, session.READ_ACCESS); // Strictly lock kar do
         }
+        
       } catch (e) {
-        // If the room is not fully created yet, allow access to initialize it
+        // Room agar server par nahi bani hai toh initialize karne do
         session.allow(room, session.FULL_ACCESS);
       }
     } else {
