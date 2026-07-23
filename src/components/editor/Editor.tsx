@@ -39,8 +39,8 @@ export default function Editor() {
   const broadcast = useBroadcastEvent();
   
   useEventListener(({ event }) => {
-    // Agar event ka type wahi hai jo humne bheja hai, toh background mein turant reload kar do
-    if (event.type === "PERMISSION_CHANGED") {
+    // 🔥 FIX: Added (event as any) to bypass strict TypeScript checking
+    if ((event as any).type === "PERMISSION_CHANGED") {
       window.location.reload();
     }
   });
