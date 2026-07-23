@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     const { userId: clerkId } = await auth(); 
     const user = clerkId ? await currentUser() : null; 
     
-    // Parse body to get the room ID
+    // Request body se room ID nikalna
     const body = await request.json();
     const room = body.room;
 
@@ -24,21 +24,31 @@ export async function POST(request: Request) {
       color: ["#F87171", "#60A5FA", "#34D399", "#FBBF24", "#A78BFA"][Math.floor(Math.random() * 5)],
     };
 
-    // 🚨 THE MASTER FIX: Ensure room exists with "Can Edit" by default!
+    // 🔥 THE MASTER FIX: Intercept and Fix "Private" Rooms Automatically!
     if (room) {
-      try {
-        await liveblocks.getRoom(room);
-      } catch (e) {
-        // Agar room nahi bana hai, toh isko zabardasti "Write" (Public Edit) access ke sath banao.
-        // Isse "normal link" share karte hi guests turant type kar payenge!
+      let roomData = await liveblocks.getRoom(room).catch(() => null);
+
+      if (!roomData) {
+        // Condition 1: Agar room bilkul nahi bana hai, toh "Public Edit" ke sath banao
         await liveblocks.createRoom(room, {
-          defaultAccesses: ["room:write"], 
+          defaultAccesses: ["room:write"],
           usersAccesses: clerkId ? { [clerkId]: ["room:write"] } : {}
         });
+      } else {
+        // Condition 2: Agar Frontend ne chup-chap Private room bana diya hai, toh usko OVERRIDE karo!
+        const isPrivateByDefault = !roomData.defaultAccesses || roomData.defaultAccesses.length === 0;
+        const hasNoOwner = !roomData.usersAccesses || Object.keys(roomData.usersAccesses).length === 0;
+
+        if (isPrivateByDefault && hasNoOwner) {
+          await liveblocks.updateRoom(room, {
+            defaultAccesses: ["room:write"], // Zabardasti "Can Edit" daal do
+            usersAccesses: clerkId ? { [clerkId]: ["room:write"] } : {}
+          });
+        }
       }
     }
 
-    // 🔥 Switch back to Official ID Tokens. No complex math required here anymore!
+    // Ab official ID tokens generate karo. Database ab 100% sahi permissions dega.
     const { status, body: authBody } = await liveblocks.identifyUser(
       { userId: liveblocksUserId, groupIds: [] },
       { userInfo }
