@@ -85,7 +85,6 @@ export default function Editor() {
     ],
     editorProps: {
       attributes: {
-        // 🔥 Ultra-legible typography setup
         class: "focus:outline-none min-h-full text-zinc-300 text-[16px] md:text-[18px] cursor-text leading-[1.8] tracking-[-0.01em] ProseMirror pb-40 pt-4 selection:bg-violet-600/40 selection:text-white antialiased",
       },
       handleKeyDown: (view, event) => {
@@ -135,7 +134,6 @@ export default function Editor() {
               const cleanText = text.trim();
               const rawHTML = await marked.parse(cleanText); 
 
-              // 🔥 The 'God-Tier' AI Response Injection
               const finalContent = `<blockquote class="ai-blockquote"><p><strong style="color: #e9d5ff; text-shadow: 0 0 20px rgba(216, 180, 254, 0.7); display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -0.02em;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #c084fc; drop-shadow: 0 0 5px rgba(192, 132, 252, 0.5);"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> AI Synapse</strong></p>${rawHTML}</blockquote><p></p>`;
 
               if (editor) {
@@ -438,7 +436,6 @@ export default function Editor() {
           --lb-z-index: 999999 !important; 
         }
 
-        /* 💎 GOD-TIER AI BLOCKQUOTE */
         .ai-blockquote {
           position: relative;
           border: 1px solid rgba(168, 85, 247, 0.15);
@@ -575,7 +572,6 @@ export default function Editor() {
         @keyframes spin-gradient { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       `}</style>
 
-      {/* 🚀 THE BUG FIX: SOLID TEXT + DROP SHADOW TO PREVENT CLIPPING ISSUES 🚀 */}
       {isLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-2xl animate-in fade-in duration-300">
           <div className="flex flex-col items-center gap-8">
@@ -590,58 +586,69 @@ export default function Editor() {
         </div>
       )}
 
-      {/* 💎 FLOATING GLASS ISLAND TOP-NAV (Dynamic Island Style) */}
-      <div className="absolute top-4 md:top-8 left-0 right-0 z-30 flex justify-center pointer-events-none px-4">
-        <div className="bg-[#050505]/70 backdrop-blur-[40px] saturate-200 px-5 sm:px-8 py-3.5 border border-white/[0.08] shadow-[0_30px_60px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.1)] rounded-[1.5rem] flex items-center justify-between w-full max-w-[1200px] pointer-events-auto transition-all">
-          <div className="flex items-center gap-4 shrink-0">
-            <div className="hidden sm:flex p-2 bg-gradient-to-br from-white/10 to-transparent rounded-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
-               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            </div>
-            <DocumentTitle />
-          </div>
+      {/* 🔥 THE BUG FIX: Outer wrapper with `overflow-hidden` perfectly masks scrolling content 🔥 */}
+      <div className="absolute top-4 md:top-8 left-0 right-0 z-30 flex justify-center pointer-events-none px-3 sm:px-4">
+        
+        {/* Outer Container (Maintains background and corners) */}
+        <div className="bg-[#050505]/70 backdrop-blur-[40px] saturate-200 border border-white/[0.08] shadow-[0_30px_60px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.1)] rounded-[1.5rem] w-full max-w-[1200px] pointer-events-auto transition-all overflow-hidden">
           
-          <div className="flex items-center gap-3.5 min-w-fit overflow-x-auto no-scrollbar pl-4">
-            <div className="flex items-center gap-2 mr-3 bg-black/60 px-3.5 py-2 rounded-full border border-white/[0.06] text-[10px] sm:text-[11px] font-mono shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)] backdrop-blur-md">
-              {syncStatus === "initial" || syncStatus === "connecting" || syncStatus === "reconnecting" ? (
-                <><div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse shadow-[0_0_10px_rgba(234,179,8,0.9)]"></div><span className="text-zinc-300 hidden sm:inline uppercase tracking-wider font-bold">Connecting</span></>
-              ) : syncStatus === "disconnected" ? (
-                <><div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]"></div><span className="text-red-400 hidden sm:inline uppercase tracking-wider font-bold">Offline</span></>
-              ) : isSyncing ? (
-                <><div className="w-2 h-2 rounded-full bg-yellow-400 animate-spin shadow-[0_0_10px_rgba(250,204,21,0.9)]"></div><span className="text-yellow-400 hidden sm:inline uppercase tracking-wider font-bold">Syncing</span></>
-              ) : (
-                <><div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]"></div><span className="text-emerald-400 hidden sm:inline uppercase tracking-wider font-bold">Encrypted</span></>
+          {/* Inner scrolling track */}
+          <div className="flex items-center justify-between px-4 sm:px-8 py-3.5 w-full overflow-x-auto no-scrollbar">
+            
+            <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+              <div className="hidden sm:flex p-2 bg-gradient-to-br from-white/10 to-transparent rounded-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
+                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </div>
+              <div className="min-w-[80px] shrink-0">
+                 <DocumentTitle />
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 sm:gap-3.5 shrink-0 pl-4 sm:pl-6">
+              <div className="flex items-center gap-2 bg-black/60 px-3.5 py-2 rounded-full border border-white/[0.06] text-[10px] sm:text-[11px] font-mono shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)] backdrop-blur-md shrink-0">
+                {syncStatus === "initial" || syncStatus === "connecting" || syncStatus === "reconnecting" ? (
+                  <><div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse shadow-[0_0_10px_rgba(234,179,8,0.9)]"></div><span className="text-zinc-300 hidden sm:inline uppercase tracking-wider font-bold">Connecting</span></>
+                ) : syncStatus === "disconnected" ? (
+                  <><div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]"></div><span className="text-red-400 hidden sm:inline uppercase tracking-wider font-bold">Offline</span></>
+                ) : isSyncing ? (
+                  <><div className="w-2 h-2 rounded-full bg-yellow-400 animate-spin shadow-[0_0_10px_rgba(250,204,21,0.9)]"></div><span className="text-yellow-400 hidden sm:inline uppercase tracking-wider font-bold">Syncing</span></>
+                ) : (
+                  <><div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]"></div><span className="text-emerald-400 hidden sm:inline uppercase tracking-wider font-bold">Encrypted</span></>
+                )}
+              </div>
+              <div className="shrink-0">
+                <ActiveUsers />
+              </div>
+              <div className="w-px h-8 bg-white/[0.08] mx-0.5 sm:mx-2 shrink-0"></div>
+              
+              {canWrite && (
+                <button 
+                  type="button"
+                  onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }} 
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddComment(); }} 
+                  className="group flex items-center gap-2 text-[11px] sm:text-[12px] font-black tracking-wide bg-[#111] hover:bg-[#1a1a1a] text-zinc-100 px-4 py-2.5 rounded-xl border border-white/[0.08] transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_5px_15px_rgba(0,0,0,0.5)] active:scale-95 shrink-0"
+                >
+                  <svg className="w-4 h-4 text-sky-400 group-hover:text-sky-300 transition-colors drop-shadow-[0_0_5px_rgba(56,189,248,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  <span className="hidden sm:inline">Comment</span>
+                </button>
               )}
-            </div>
-            <ActiveUsers />
-            <div className="w-px h-8 bg-white/[0.08] mx-2 hidden sm:block"></div>
-            
-            {canWrite && (
-              <button 
-                type="button"
-                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }} 
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddComment(); }} 
-                className="group flex items-center gap-2 text-[11px] sm:text-[12px] font-black tracking-wide bg-[#111] hover:bg-[#1a1a1a] text-zinc-100 px-4 py-2.5 rounded-xl border border-white/[0.08] transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_5px_15px_rgba(0,0,0,0.5)] active:scale-95"
-              >
-                <svg className="w-4 h-4 text-sky-400 group-hover:text-sky-300 transition-colors drop-shadow-[0_0_5px_rgba(56,189,248,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                <span className="hidden sm:inline">Comment</span>
+              
+              <button onClick={() => setIsShareModalOpen(true)} className="relative flex items-center gap-1.5 text-[11px] sm:text-[12px] font-black tracking-wide bg-white text-black hover:bg-zinc-200 px-5 py-2.5 rounded-xl shadow-[0_0_25px_rgba(255,255,255,0.2)] transition-all duration-300 active:scale-95 shrink-0 overflow-hidden group">
+                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-black/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                 Share Link
               </button>
-            )}
-            
-            <button onClick={() => setIsShareModalOpen(true)} className="relative flex items-center gap-1.5 text-[11px] sm:text-[12px] font-black tracking-wide bg-white text-black hover:bg-zinc-200 px-5 py-2.5 rounded-xl shadow-[0_0_25px_rgba(255,255,255,0.2)] transition-all duration-300 active:scale-95 shrink-0 overflow-hidden group">
-               <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-black/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-               Share Link
-            </button>
-            
-            <div className="flex bg-[#050505] rounded-xl border border-white/[0.08] p-1 shadow-[inset_0_2px_5px_rgba(0,0,0,0.8)] ml-2">
-              <button onClick={exportDocumentPDF} className="flex items-center gap-1 text-[10px] sm:text-xs font-black hover:bg-white/10 text-zinc-400 px-3 py-2 rounded-lg transition-all hover:text-white shrink-0">PDF</button>
-              <div className="w-px h-5 bg-white/[0.08] my-auto"></div>
-              <button onClick={exportDocumentTXT} className="flex items-center gap-1 text-[10px] sm:text-xs font-black hover:bg-white/10 text-zinc-400 px-3 py-2 rounded-lg transition-all hover:text-white shrink-0">TXT</button>
+              
+              <div className="flex bg-[#050505] rounded-xl border border-white/[0.08] p-1 shadow-[inset_0_2px_5px_rgba(0,0,0,0.8)] ml-1 sm:ml-2 shrink-0 pr-4 sm:pr-1">
+                <button onClick={exportDocumentPDF} className="flex items-center gap-1 text-[10px] sm:text-xs font-black hover:bg-white/10 text-zinc-400 px-3 py-2 rounded-lg transition-all hover:text-white shrink-0">PDF</button>
+                <div className="w-px h-5 bg-white/[0.08] my-auto shrink-0"></div>
+                <button onClick={exportDocumentTXT} className="flex items-center gap-1 text-[10px] sm:text-xs font-black hover:bg-white/10 text-zinc-400 px-3 py-2 rounded-lg transition-all hover:text-white shrink-0">TXT</button>
+              </div>
             </div>
+            
           </div>
         </div>
       </div>
       
-      {/* 🌌 EDITOR CONTENT WRAPPER */}
       <div className="flex-1 overflow-y-auto w-full relative bg-transparent custom-scrollbar scroll-smooth z-10 pt-28 md:pt-40">
         <div className="relative z-10">
           <DocumentHeader />
@@ -659,7 +666,6 @@ export default function Editor() {
         </div>
       </div>
 
-      {/* 🔥 FLOATING BOTTOM TOOLBAR */}
       {canWrite && (
         <div className="absolute bottom-6 sm:bottom-8 md:bottom-12 left-0 right-0 flex justify-center z-50 pointer-events-none animate-in slide-in-from-bottom-10 fade-in duration-700 ease-out">
            <div className="pointer-events-auto">
