@@ -353,10 +353,9 @@ export default function Editor() {
   );
 
   return (
-    /* 🔥 TOP 1% UI WRAPPER: Pure Black, Subtle Dev Grid, Ambient Glow, Linear-style Borders */
     <div className="w-full max-w-[1400px] mx-auto md:my-6 lg:my-8 bg-[#030303] md:rounded-[28px] shadow-[0_0_80px_rgba(0,0,0,0.8)] border-y md:border border-white/[0.04] overflow-hidden relative flex flex-col h-[100dvh] md:h-[88vh] lg:h-[90vh] transition-all ring-1 ring-black">
       
-      {/* 🌟 AMBIENT GLOWS (The Magic Touch) */}
+      {/* 🌟 AMBIENT GLOWS */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-32 bg-violet-600/10 blur-[100px] pointer-events-none z-0"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-600/5 blur-[120px] pointer-events-none z-0"></div>
 
@@ -419,6 +418,7 @@ export default function Editor() {
         </div>
       )}
 
+      {/* 🔥 MOBILE RESPONSIVENESS FIXES ADDED HERE */}
       <style>{`
         .lb-root {
           --lb-z-index: 999999 !important; 
@@ -428,9 +428,10 @@ export default function Editor() {
         .ProseMirror blockquote {
           position: relative;
           border-left: 2px solid transparent;
-          margin: 2.5rem 0;
+          /* Reduced margins/paddings for Mobile */
+          margin: 1.25rem 0;
           background: linear-gradient(145deg, rgba(139, 92, 246, 0.08) 0%, rgba(139, 92, 246, 0.01) 100%);
-          padding: 1.5rem 2rem;
+          padding: 1rem 1.25rem;
           border-radius: 12px;
           border: 1px solid rgba(139, 92, 246, 0.15);
           border-left-color: #a855f7;
@@ -439,7 +440,7 @@ export default function Editor() {
         }
         .ProseMirror blockquote p {
           margin-bottom: 0.85rem;
-          line-height: 1.8;
+          line-height: 1.6; /* Tighter on mobile */
           color: #e4e4e7;
           font-weight: 400;
         }
@@ -447,11 +448,11 @@ export default function Editor() {
           margin-bottom: 0;
         }
         
-        /* 🚀 INLINE CODE (Beautiful Neon Tags) */
+        /* 🚀 INLINE CODE */
         .ProseMirror code {
           background-color: rgba(168, 85, 247, 0.08); 
           color: #d8b4fe; 
-          padding: 0.2rem 0.4rem;
+          padding: 0.15rem 0.35rem;
           border-radius: 6px;
           font-family: 'JetBrains Mono', 'Fira Code', monospace;
           font-size: 0.85em;
@@ -468,19 +469,37 @@ export default function Editor() {
           box-shadow: none !important;
         }
 
-        /* 🚀 CODE BLOCKS (Linear/Vercel Aesthetic) */
+        /* 🚀 CODE BLOCKS */
         .ProseMirror pre {
           background: #050505;
           color: #a1a1aa;
-          padding: 1.5rem;
+          /* Reduced for Mobile */
+          padding: 1rem;
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.08);
           font-family: 'JetBrains Mono', 'Fira Code', monospace;
-          font-size: 0.9em;
-          margin: 2rem 0;
+          font-size: 0.85em;
+          margin: 1.25rem 0;
           overflow-x: auto;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 20px 40px -20px rgba(0, 0, 0, 0.8);
-          line-height: 1.7;
+          line-height: 1.6;
+        }
+
+        /* Desktop Spacing Adjustments */
+        @media (min-width: 640px) {
+          .ProseMirror blockquote {
+            margin: 2.5rem 0;
+            padding: 1.5rem 2rem;
+          }
+          .ProseMirror blockquote p {
+            line-height: 1.8;
+          }
+          .ProseMirror pre {
+            padding: 1.5rem;
+            margin: 2rem 0;
+            font-size: 0.9em;
+            line-height: 1.7;
+          }
         }
 
         .hljs-keyword, .hljs-operator { color: #c678dd; } 
@@ -531,7 +550,7 @@ export default function Editor() {
 
       {/* 🔮 HOLOGRAPHIC AI LOADING OVERLAY */}
       {isLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 p-4">
           <div className="bg-[#09090b]/80 backdrop-blur-2xl text-white px-7 py-5 rounded-2xl text-sm md:text-base font-medium flex items-center gap-5 shadow-[0_30px_60px_rgba(0,0,0,0.5)] border border-white/[0.08] ring-1 ring-black">
             <div className="flex gap-1.5 relative">
               <div className="absolute inset-0 bg-violet-500/40 blur-[20px] rounded-full"></div>
@@ -545,7 +564,7 @@ export default function Editor() {
       )}
 
       {/* 💎 FROSTED GLASS TOOLBAR */}
-      <div className="bg-[#030303]/70 backdrop-blur-3xl px-4 sm:px-6 py-3 border-b border-white/[0.04] flex items-center justify-between shrink-0 overflow-x-auto z-20 no-scrollbar shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative">
+      <div className="bg-[#030303]/70 backdrop-blur-3xl px-3 sm:px-6 py-3 border-b border-white/[0.04] flex items-center justify-between shrink-0 overflow-x-auto z-20 no-scrollbar shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative">
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="hidden sm:flex p-1.5 bg-zinc-900/50 rounded-lg border border-white/[0.05] shadow-inner">
              <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -573,22 +592,22 @@ export default function Editor() {
               type="button"
               onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }} 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddComment(); }} 
-              className="group flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold bg-zinc-900/80 hover:bg-zinc-800 text-zinc-100 px-3.5 py-2 rounded-lg border border-white/[0.06] transition-all shadow-lg active:scale-95"
+              className="group flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold bg-zinc-900/80 hover:bg-zinc-800 text-zinc-100 px-3 sm:px-3.5 py-2 rounded-lg border border-white/[0.06] transition-all shadow-lg active:scale-95"
             >
               <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400 group-hover:text-sky-300 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
               <span className="hidden sm:inline tracking-wide">Comment</span>
             </button>
           )}
           
-          <button onClick={() => setIsShareModalOpen(true)} className="relative flex items-center gap-1.5 text-[11px] sm:text-xs font-bold bg-white text-black hover:bg-zinc-200 px-4.5 py-2 rounded-lg shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all active:scale-95 shrink-0 overflow-hidden group">
+          <button onClick={() => setIsShareModalOpen(true)} className="relative flex items-center gap-1.5 text-[11px] sm:text-xs font-bold bg-white text-black hover:bg-zinc-200 px-3.5 sm:px-4.5 py-2 rounded-lg shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all active:scale-95 shrink-0 overflow-hidden group">
              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-black/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
              Share
           </button>
           
           <div className="flex bg-black/50 rounded-lg border border-white/[0.05] p-0.5 shadow-inner backdrop-blur-md">
-            <button onClick={exportDocumentPDF} className="flex items-center gap-1 text-[10px] sm:text-xs font-semibold hover:bg-zinc-800/80 text-zinc-400 px-3 py-1.5 rounded-md transition-all hover:text-zinc-100 shrink-0">PDF</button>
+            <button onClick={exportDocumentPDF} className="flex items-center gap-1 text-[10px] sm:text-xs font-semibold hover:bg-zinc-800/80 text-zinc-400 px-2 sm:px-3 py-1.5 rounded-md transition-all hover:text-zinc-100 shrink-0">PDF</button>
             <div className="w-px h-4 bg-white/[0.05] my-auto"></div>
-            <button onClick={exportDocumentTXT} className="flex items-center gap-1 text-[10px] sm:text-xs font-semibold hover:bg-zinc-800/80 text-zinc-400 px-3 py-1.5 rounded-md transition-all hover:text-zinc-100 shrink-0">TXT</button>
+            <button onClick={exportDocumentTXT} className="flex items-center gap-1 text-[10px] sm:text-xs font-semibold hover:bg-zinc-800/80 text-zinc-400 px-2 sm:px-3 py-1.5 rounded-md transition-all hover:text-zinc-100 shrink-0">TXT</button>
           </div>
         </div>
       </div>
@@ -596,14 +615,15 @@ export default function Editor() {
       {/* 🌌 DEV GRID BACKGROUND + EDITOR CONTENT */}
       <div className="flex-1 overflow-y-auto w-full relative bg-transparent custom-scrollbar scroll-smooth z-10">
         
-        {/* Subtle Next-Gen Tech Grid (The ultimate Dev-Tool touch) */}
+        {/* Subtle Next-Gen Tech Grid */}
         <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `linear-gradient(to right, #80808012 1px, transparent 1px), linear-gradient(to bottom, #80808012 1px, transparent 1px)`, backgroundSize: `24px 24px` }}></div>
 
         <div className="relative z-10">
           <DocumentHeader />
         </div>
         
-        <div className="p-4 sm:p-6 md:p-12 max-w-[850px] mx-auto w-full relative lb-root lb-dark z-10">
+        {/* 🔥 MOBILE FIX: Adjusted outer container padding (px-2 py-4 on mobile) to utilize max width */}
+        <div className="px-2 py-4 sm:px-6 sm:py-6 md:p-12 max-w-[850px] mx-auto w-full relative lb-root lb-dark z-10">
           {canWrite && <Toolbar editor={editor} onAskAI={handleAskAI} />}
           {canWrite && <FloatingBubbleMenu editor={editor} />}
           
