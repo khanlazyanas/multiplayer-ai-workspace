@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension, FloatingComposer, FloatingThreads } from "@liveblocks/react-tiptap";
-import { useStatus, useThreads, useRoom, useSelf } from "@liveblocks/react/suspense"; 
+// 🔥 Naye hooks import kiye hain: useBroadcastEvent aur useEventListener
+import { useStatus, useThreads, useRoom, useSelf, useBroadcastEvent, useEventListener } from "@liveblocks/react/suspense"; 
 import Mention from "@tiptap/extension-mention";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
@@ -33,6 +34,16 @@ export default function Editor() {
   
   // Get current user's write permission strictly from Liveblocks
   const canWrite = useSelf((me) => me.canWrite);
+  
+  // 🔥 1. THE RECEIVER & SENDER HOOKS INITIALIZED
+  const broadcast = useBroadcastEvent();
+  
+  useEventListener(({ event }) => {
+    // Agar event ka type wahi hai jo humne bheja hai, toh background mein turant reload kar do
+    if (event.type === "PERMISSION_CHANGED") {
+      window.location.reload();
+    }
+  });
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -287,12 +298,15 @@ export default function Editor() {
       
       if (!res.ok) throw new Error("Failed to sync with backend");
       
-      toast.success(`Access updated! Reloading to apply changes...`, { 
+      toast.success(`Access updated! Applying changes...`, { 
         id: toastId,
         style: { background: '#18181b', color: '#34d399', border: '1px solid #059669' }
       });
 
-      // Force page reload to invalidate Liveblocks cache and apply new tokens globally
+      // 🔥 2. THE SENDER FLAG: Database update hone ke baad sabhi guests ko signal bhej do
+      broadcast({ type: "PERMISSION_CHANGED" });
+
+      // Owner (tumhara) khud ka page reload karne ke liye (Taki UI fresh rahe)
       setTimeout(() => {
         window.location.reload();
       }, 1000);
