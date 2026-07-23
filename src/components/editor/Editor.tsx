@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useLiveblocksExtension, FloatingComposer, FloatingThreads } from "@liveblocks/react-tiptap";
-// 🔥 Naye hooks import kiye hain: useBroadcastEvent aur useEventListener
 import { useStatus, useThreads, useRoom, useSelf, useBroadcastEvent, useEventListener } from "@liveblocks/react/suspense"; 
 import Mention from "@tiptap/extension-mention";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
@@ -32,14 +31,11 @@ export default function Editor() {
   const { threads } = useThreads();
   const room = useRoom();
   
-  // Get current user's write permission strictly from Liveblocks
   const canWrite = useSelf((me) => me.canWrite);
   
-  // 🔥 1. THE RECEIVER & SENDER HOOKS INITIALIZED
   const broadcast = useBroadcastEvent();
   
   useEventListener(({ event }) => {
-    // 🔥 FIX: Added (event as any) to bypass strict TypeScript checking
     if ((event as any).type === "PERMISSION_CHANGED") {
       window.location.reload();
     }
@@ -53,7 +49,7 @@ export default function Editor() {
 
   const editor = useEditor({
     immediatelyRender: false,
-    editable: canWrite, // Initial state
+    editable: canWrite, 
     onUpdate: () => {
       setIsSyncing(true);
     },
@@ -89,10 +85,10 @@ export default function Editor() {
     ],
     editorProps: {
       attributes: {
-        class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror",
+        class: "focus:outline-none min-h-full text-zinc-200 text-base md:text-lg cursor-text leading-relaxed ProseMirror pb-32",
       },
       handleKeyDown: (view, event) => {
-        if (!canWrite) return true; // Block keyboard entirely for viewers
+        if (!canWrite) return true; 
 
         const isCtrlEnter = event.key === 'Enter' && (event.ctrlKey || event.metaKey);
         const isNormalEnter = event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey;
@@ -160,7 +156,6 @@ export default function Editor() {
     },
   });
 
-  // Dynamically force Tiptap to lock or unlock based on Liveblocks permission
   useEffect(() => {
     if (editor) {
       editor.setEditable(canWrite);
@@ -303,10 +298,8 @@ export default function Editor() {
         style: { background: '#18181b', color: '#34d399', border: '1px solid #059669' }
       });
 
-      // 🔥 2. THE SENDER FLAG: Database update hone ke baad sabhi guests ko signal bhej do
       broadcast({ type: "PERMISSION_CHANGED" });
 
-      // Owner (tumhara) khud ka page reload karne ke liye (Taki UI fresh rahe)
       setTimeout(() => {
         window.location.reload();
       }, 1000);
@@ -350,12 +343,13 @@ export default function Editor() {
   if (!editor) return <div className="flex items-center justify-center min-h-[60vh] text-zinc-500 font-medium animate-pulse">Initializing Workspace Engine...</div>;
 
   return (
-    <div className="w-full max-w-6xl mx-auto mt-4 md:mt-6 bg-[#0c0c0e] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800/80 overflow-hidden relative flex flex-col h-[75vh] md:h-[80vh] transition-all">
+    /* 🔥 RESPONSIVE FIX: h-[100dvh] on mobile for native app feel, and beautifully centered on desktop */
+    <div className="w-full max-w-7xl mx-auto md:my-4 lg:my-6 bg-[#0c0c0e] md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border-y md:border border-zinc-800/80 overflow-hidden relative flex flex-col h-[100dvh] md:h-[85vh] lg:h-[88vh] transition-all">
       
       {isShareModalOpen && (
-        <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
           <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
-            <div className="p-5 border-b border-zinc-800/80 flex justify-between items-center bg-[#121214]">
+            <div className="p-4 md:p-5 border-b border-zinc-800/80 flex justify-between items-center bg-[#121214]">
               <div>
                 <h3 className="text-lg font-semibold text-zinc-100">Share Workspace</h3>
                 <p className="text-xs text-zinc-400 mt-1">Send this link to anyone to collaborate with them.</p>
@@ -365,7 +359,7 @@ export default function Editor() {
               </button>
             </div>
             
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               <div className="flex gap-2 mb-2">
                 <input 
                   type="text" 
@@ -373,15 +367,15 @@ export default function Editor() {
                   value={typeof window !== 'undefined' ? window.location.href : ''} 
                   className="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none" 
                 />
-                <button onClick={copyLink} className="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-lg text-sm font-semibold shadow-lg transition-all active:scale-95">
+                <button onClick={copyLink} className="bg-violet-600 hover:bg-violet-500 text-white px-4 md:px-5 py-2 rounded-lg text-sm font-semibold shadow-lg transition-all active:scale-95">
                   Copy
                 </button>
               </div>
             </div>
 
-            <div className="bg-[#121214] px-6 py-4 border-t border-zinc-800/80 flex items-center justify-between">
+            <div className="bg-[#121214] px-4 md:px-6 py-4 border-t border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 border border-violet-500/30">
+                <div className="w-9 h-9 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 border border-violet-500/30 shrink-0">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 </div>
                 <div>
@@ -394,7 +388,7 @@ export default function Editor() {
                 value={accessType}
                 onChange={(e) => handleUpdateAccess(e.target.value)}
                 disabled={isUpdatingAccess || !canWrite}
-                className="bg-zinc-800 text-xs font-semibold text-zinc-200 px-3 py-2 rounded-md border border-zinc-700/80 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 cursor-pointer disabled:opacity-50 transition-all shadow-inner"
+                className="bg-zinc-800 text-xs font-semibold text-zinc-200 px-3 py-2 rounded-md border border-zinc-700/80 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 cursor-pointer disabled:opacity-50 transition-all shadow-inner w-full sm:w-auto"
               >
                 <option value="write">Can Edit (Full)</option>
                 <option value="read">Can View (Read-Only)</option>
@@ -409,12 +403,17 @@ export default function Editor() {
           --lb-z-index: 999999 !important; 
         }
 
+        /* 🔥 UPGRADED AI BLOCKQUOTE DESIGN */
         .ProseMirror blockquote {
-          border-left: 3px solid #8b5cf6;
+          border-left: 4px solid #8b5cf6;
           margin: 1.5rem 0;
-          background: rgba(139, 92, 246, 0.08);
-          padding: 1.25rem;
+          background: linear-gradient(to right, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.02));
+          padding: 1.25rem 1.5rem;
           border-radius: 0.5rem;
+          border-top: 1px solid rgba(139, 92, 246, 0.1);
+          border-right: 1px solid rgba(139, 92, 246, 0.05);
+          border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+          box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2);
         }
         .ProseMirror blockquote p {
           margin-bottom: 0.5rem;
@@ -424,6 +423,26 @@ export default function Editor() {
           margin-bottom: 0;
         }
         
+        /* 🔥 INVISIBLE TEXT FIX: ULTRA-PREMIUM INLINE CODE STYLING */
+        .ProseMirror code {
+          background-color: #27272a; 
+          color: #c084fc; 
+          padding: 0.15rem 0.35rem;
+          border-radius: 0.375rem;
+          font-family: 'Fira Code', 'Courier New', Courier, monospace;
+          font-size: 0.85em;
+          border: 1px solid rgba(192, 132, 252, 0.2);
+          font-weight: 500;
+        }
+
+        /* Reset block code styles so they don't clash with inline styles */
+        .ProseMirror pre code {
+          background-color: transparent !important;
+          color: inherit !important;
+          padding: 0 !important;
+          border: none !important;
+        }
+
         .ProseMirror pre {
           background: #18181b;
           color: #abb2bf;
@@ -435,11 +454,7 @@ export default function Editor() {
           margin: 1rem 0;
           overflow-x: auto;
         }
-        .ProseMirror pre code {
-          background: none;
-          padding: 0;
-          color: inherit;
-        }
+
         .hljs-keyword, .hljs-operator { color: #c678dd; } 
         .hljs-built_in, .hljs-type, .hljs-class .hljs-title { color: #e5c07b; } 
         .hljs-literal, .hljs-number { color: #d19a66; } 
@@ -455,6 +470,15 @@ export default function Editor() {
         .ProseMirror li {
           margin-bottom: 0.25rem;
         }
+
+        /* Hide Scrollbar for Toolbar */
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
       `}</style>
 
       {isLoading && (
@@ -465,24 +489,25 @@ export default function Editor() {
         </div>
       )}
 
-      <div className="bg-zinc-900/60 backdrop-blur-xl px-5 py-3.5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 overflow-x-auto z-20">
-        <div className="flex items-center gap-3">
+      {/* 🔥 RESPONSIVE TOOLBAR: Smooth horizontal scrolling on mobile */}
+      <div className="bg-zinc-900/60 backdrop-blur-xl px-3 sm:px-5 py-2.5 sm:py-3.5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 overflow-x-auto z-20 no-scrollbar">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="hidden sm:flex p-1.5 bg-zinc-800/50 rounded-md border border-zinc-700/50">
              <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           </div>
           <DocumentTitle />
         </div>
         
-        <div className="flex items-center gap-2 min-w-fit">
-          <div className="flex items-center gap-2 mr-3 bg-black/40 px-3 py-1.5 rounded-full border border-zinc-800/80 text-[11px] font-mono hidden sm:flex shadow-inner">
+        <div className="flex items-center gap-2 min-w-fit pl-4">
+          <div className="flex items-center gap-2 mr-1 sm:mr-3 bg-black/40 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-zinc-800/80 text-[10px] sm:text-[11px] font-mono shadow-inner">
             {syncStatus === "initial" || syncStatus === "connecting" || syncStatus === "reconnecting" ? (
-              <><div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div><span className="text-zinc-400">Connecting...</span></>
+              <><div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div><span className="text-zinc-400 hidden sm:inline">Connecting...</span></>
             ) : syncStatus === "disconnected" ? (
-              <><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div><span className="text-red-400">Offline</span></>
+              <><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div><span className="text-red-400 hidden sm:inline">Offline</span></>
             ) : isSyncing ? (
-              <><div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-spin"></div><span className="text-yellow-400">Syncing...</span></>
+              <><div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-spin"></div><span className="text-yellow-400 hidden sm:inline">Syncing...</span></>
             ) : (
-              <><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div><span className="text-emerald-400">Saved</span></>
+              <><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div><span className="text-emerald-400 hidden sm:inline">Saved</span></>
             )}
           </div>
           <ActiveUsers />
@@ -491,32 +516,26 @@ export default function Editor() {
           {canWrite && (
             <button 
               type="button"
-              onPointerDown={(e) => {
-                e.preventDefault(); 
-                e.stopPropagation();
-              }} 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleAddComment();
-              }} 
-              className="flex items-center gap-1.5 text-xs font-semibold bg-sky-600/90 hover:bg-sky-500 text-white px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(2,132,199,0.3)] transition-all"
+              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }} 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddComment(); }} 
+              className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold bg-sky-600/90 hover:bg-sky-500 text-white px-2.5 sm:px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(2,132,199,0.3)] transition-all"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-              Comment
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              <span className="hidden sm:inline">Comment</span>
             </button>
           )}
           
-          <button onClick={() => setIsShareModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95">Share</button>
-          <button onClick={exportDocumentPDF} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">PDF</button>
-          <button onClick={exportDocumentTXT} className="flex items-center gap-1.5 text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white">TXT</button>
+          <button onClick={() => setIsShareModalOpen(true)} className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-3 sm:px-3.5 py-1.5 rounded-md shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-95 shrink-0">Share</button>
+          <button onClick={exportDocumentPDF} className="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-2.5 sm:px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white shrink-0">PDF</button>
+          <button onClick={exportDocumentTXT} className="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 px-2.5 sm:px-3 py-1.5 rounded-md border border-zinc-700/50 transition-all hover:text-white shrink-0">TXT</button>
         </div>
       </div>
       
       <div className="flex-1 overflow-y-auto w-full relative bg-transparent custom-scrollbar">
         <DocumentHeader />
         
-        <div className="p-5 md:p-10 max-w-4xl mx-auto w-full relative lb-root lb-dark">
+        {/* Editor Area padding adjust ki gayi hai taaki phone par screen edge se text na chipke */}
+        <div className="p-4 sm:p-5 md:p-10 max-w-4xl mx-auto w-full relative lb-root lb-dark">
           {canWrite && <Toolbar editor={editor} onAskAI={handleAskAI} />}
           {canWrite && <FloatingBubbleMenu editor={editor} />}
           
