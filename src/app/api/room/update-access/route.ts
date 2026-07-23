@@ -1,6 +1,7 @@
 import { Liveblocks } from "@liveblocks/node";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server"; 
+import { revalidatePath } from "next/cache"; // 🔥 Nayi line add ki hai
 
 const liveblocks = new Liveblocks({
   secret: process.env.LIVEBLOCKS_SECRET_KEY as string,
@@ -10,7 +11,6 @@ export async function POST(req: Request) {
   try {
     const { userId } = await auth(); 
     
-    // Safely parse body here as well just in case
     const text = await req.text();
     const body = text ? JSON.parse(text) : {};
     const { roomId, accessType } = body;
@@ -39,6 +39,9 @@ export async function POST(req: Request) {
         usersAccesses: usersAccesses
       });
     }
+
+    // 🔥 THE MAGIC FIX: Ye Next.js ko force karega ki UI ko turant update kare bina manual refresh ke!
+    revalidatePath('/', 'layout');
 
     return NextResponse.json({ success: true });
   } catch (error) {
