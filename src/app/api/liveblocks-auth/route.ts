@@ -9,7 +9,10 @@ export async function POST(request: Request) {
   try {
     const { userId: clerkId } = await auth(); 
     const user = clerkId ? await currentUser() : null; 
-    const { room } = await request.json();
+    
+    // Parse body to get the room ID
+    const body = await request.json();
+    const room = body.room;
 
     const isGuest = !clerkId;
     const liveblocksUserId = isGuest ? `guest-${Math.random().toString(36).slice(2, 10)}` : clerkId;
@@ -21,37 +24,27 @@ export async function POST(request: Request) {
       color: ["#F87171", "#60A5FA", "#34D399", "#FBBF24", "#A78BFA"][Math.floor(Math.random() * 5)],
     };
 
-    const session = liveblocks.prepareSession(liveblocksUserId, { userInfo });
-
+    // 🚨 THE MASTER FIX: Ensure room exists with "Can Edit" by default!
     if (room) {
       try {
-        const roomData = await liveblocks.getRoom(room);
-        const defaultAccesses = roomData.defaultAccesses || [];
-        const usersAccesses = roomData.usersAccesses || {};
-
-        // THE 3 GOLDEN RULES:
-        const isOwner = clerkId && usersAccesses[clerkId]?.includes("room:write");
-        const isPublicEdit = defaultAccesses.includes("room:write");
-        const isUntouched = defaultAccesses.length === 0 && Object.keys(usersAccesses).length === 0;
-
-        // Give FULL Edit access if they are Owner, or Link is Editable, or Room is newly created
-        if (isOwner || isPublicEdit || isUntouched) {
-          session.allow(room, session.FULL_ACCESS);
-        } else {
-          // Strictly lock all Guests if "Can View" is selected
-          session.allow(room, session.READ_ACCESS);
-        }
+        await liveblocks.getRoom(room);
       } catch (e) {
-        // Room fallback
-        session.allow(room, session.FULL_ACCESS);
+        // Agar room nahi bana hai, toh isko zabardasti "Write" (Public Edit) access ke sath banao.
+        // Isse "normal link" share karte hi guests turant type kar payenge!
+        await liveblocks.createRoom(room, {
+          defaultAccesses: ["room:write"], 
+          usersAccesses: clerkId ? { [clerkId]: ["room:write"] } : {}
+        });
       }
-    } else {
-      session.allow("*", session.FULL_ACCESS);
     }
 
-    const { status, body } = await session.authorize();
+    // 🔥 Switch back to Official ID Tokens. No complex math required here anymore!
+    const { status, body: authBody } = await liveblocks.identifyUser(
+      { userId: liveblocksUserId, groupIds: [] },
+      { userInfo }
+    );
     
-    return new Response(body, { 
+    return new Response(authBody, { 
       status, 
       headers: { 'Content-Type': 'application/json' } 
     });

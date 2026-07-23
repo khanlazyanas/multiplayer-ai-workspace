@@ -15,25 +15,25 @@ export async function POST(req: Request) {
       return new NextResponse("Missing parameters", { status: 400 });
     }
 
-    // 1. Set public link access
+    // "write" = Can Edit, "read" = Can View (Locked)
     const defaultAccesses = accessType === "write" 
       ? ["room:write"] 
       : ["room:read", "room:presence:write"];
 
-    // 2. Add Owner securely
+    // Owner ko hamesha VIP (Write) access rahega
     const usersAccesses: any = {};
     if (userId) {
       usersAccesses[userId] = ["room:write"];
     }
 
     try {
-      // Safely update the room permissions
+      // Update room in Liveblocks DB
       await liveblocks.updateRoom(roomId, {
         defaultAccesses: defaultAccesses as any,
         usersAccesses: usersAccesses
       });
     } catch (e) {
-      // Agar room ab तक server par nahi tha, toh isko create kar do!
+      // Fallback agar room nahi tha
       await liveblocks.createRoom(roomId, {
         defaultAccesses: defaultAccesses as any,
         usersAccesses: usersAccesses
