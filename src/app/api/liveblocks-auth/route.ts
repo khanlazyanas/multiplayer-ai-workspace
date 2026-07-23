@@ -24,28 +24,26 @@ export async function POST(request: Request) {
     const session = liveblocks.prepareSession(liveblocksUserId, { userInfo });
 
     if (room) {
-      const roomData = await liveblocks.getRoom(room).catch(() => null);
+      try {
+        const roomData = await liveblocks.getRoom(room);
+        const defaultAccesses = roomData.defaultAccesses || [];
+        const usersAccesses = roomData.usersAccesses || {};
 
-      let accessType = "write";
-      let ownerId: string | null = null; // Explicitly defining the type here
+        // THE 3 GOLDEN RULES:
+        const isOwner = clerkId && usersAccesses[clerkId]?.includes("room:write");
+        const isPublicEdit = defaultAccesses.includes("room:write");
+        const isUntouched = defaultAccesses.length === 0 && Object.keys(usersAccesses).length === 0;
 
-      // Agar room ka data milta hai, toh apne lagaye hue 'Tags' (Metadata) padho
-      if (roomData && roomData.metadata) {
-        // 🔥 FIX: Added 'as string' to satisfy TypeScript's strict type checking
-        accessType = (roomData.metadata.access as string) || "write";
-        ownerId = (roomData.metadata.ownerId as string) || null;
-      }
-
-      // 👑 THE MASTER RULE: Kya tum is document ke Owner ho?
-      const isOwner = clerkId && (ownerId === clerkId);
-
-      // Agar tum Owner ho, YA document "Can Edit" par set hai -> Full Access 
-      if (isOwner || accessType === "write") {
+        // Give FULL Edit access if they are Owner, or Link is Editable, or Room is newly created
+        if (isOwner || isPublicEdit || isUntouched) {
+          session.allow(room, session.FULL_ACCESS);
+        } else {
+          // Strictly lock all Guests if "Can View" is selected
+          session.allow(room, session.READ_ACCESS);
+        }
+      } catch (e) {
+        // Room fallback
         session.allow(room, session.FULL_ACCESS);
-      } 
-      // Agar "Read-Only" set hai, toh baaki sab (Guests & Friends) yahan lock ho jayenge!
-      else {
-        session.allow(room, session.READ_ACCESS);
       }
     } else {
       session.allow("*", session.FULL_ACCESS);
@@ -60,6 +58,6 @@ export async function POST(request: Request) {
     
   } catch (error) {
     console.error("Liveblocks auth error:", error);
-    return new Response(JSON.stringify({ error: "Auth process failed" }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Auth failed" }), { status: 500 });
   }
 }

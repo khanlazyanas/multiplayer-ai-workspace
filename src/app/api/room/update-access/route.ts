@@ -9,47 +9,40 @@ const liveblocks = new Liveblocks({
 export async function POST(req: Request) {
   try {
     const { userId } = await auth(); 
-    
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
     const { roomId, accessType } = await req.json();
 
     if (!roomId || !accessType) {
       return new NextResponse("Missing parameters", { status: 400 });
     }
 
-    let room;
-    try {
-      room = await liveblocks.getRoom(roomId);
-    } catch (e) {
-      room = null; // Agar room nahi bana hai
+    // 1. Set public link access
+    const defaultAccesses = accessType === "write" 
+      ? ["room:write"] 
+      : ["room:read", "room:presence:write"];
+
+    // 2. Add Owner securely
+    const usersAccesses: any = {};
+    if (userId) {
+      usersAccesses[userId] = ["room:write"];
     }
 
-    if (room) {
-      // Agar room pehle se hai, toh sirf uska Metadata 'Tag' update karo
+    try {
+      // Safely update the room permissions
       await liveblocks.updateRoom(roomId, {
-        metadata: {
-          ...room.metadata,
-          access: accessType, // "write" ya "read"
-          ownerId: room.metadata.ownerId || userId, // Tumhe hamesha ke liye Owner bana dega
-        }
+        defaultAccesses: defaultAccesses as any,
+        usersAccesses: usersAccesses
       });
-    } else {
-      // Agar room ekdum naya hai, toh usko create karo aur Tag lagao
+    } catch (e) {
+      // Agar room ab तक server par nahi tha, toh isko create kar do!
       await liveblocks.createRoom(roomId, {
-        defaultAccesses: [], // Inko khali chhod do taaki Liveblocks beech mein tang na adaye
-        metadata: {
-          access: accessType,
-          ownerId: userId,
-        }
+        defaultAccesses: defaultAccesses as any,
+        usersAccesses: usersAccesses
       });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error updating room access:", error);
+    console.error("Update access error:", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
