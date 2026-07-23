@@ -353,10 +353,8 @@ export default function Editor() {
   );
 
   return (
-    /* 🚀 TOP 0.1% UI: True OLED Black, Spotlights, and Seamless Inset Shadows */
     <div className="w-full h-[100dvh] overflow-hidden bg-[#000000] relative flex flex-col font-sans text-zinc-100 selection:bg-violet-500/30">
       
-      {/* 🌌 CINEMATIC SPOTLIGHTS (The Secret Sauce) */}
       <div className="absolute top-[-10%] left-[20%] w-[60%] h-[30%] bg-violet-600/15 blur-[120px] rounded-[100%] pointer-events-none z-0"></div>
       <div className="absolute bottom-[-10%] right-[10%] w-[50%] h-[40%] bg-blue-600/10 blur-[130px] rounded-[100%] pointer-events-none z-0"></div>
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none z-0 mix-blend-overlay"></div>
@@ -420,13 +418,11 @@ export default function Editor() {
         </div>
       )}
 
-      {/* 🚀 THE MASTERPIECE STYLES */}
       <style>{`
         .lb-root {
           --lb-z-index: 999999 !important; 
         }
 
-        /* 👑 Apple/Linear Style AI Blockquote */
         .ai-blockquote {
           position: relative;
           border: 1px solid rgba(168, 85, 247, 0.2);
@@ -449,7 +445,6 @@ export default function Editor() {
           margin-bottom: 0;
         }
         
-        /* 👑 High-End Inline Code */
         .ProseMirror code {
           background-color: rgba(255, 255, 255, 0.05); 
           color: #e4e4e7; 
@@ -470,12 +465,11 @@ export default function Editor() {
           box-shadow: none !important;
         }
 
-        /* 👑 MAC OS STYLE CODE BLOCKS (The Wow Factor) */
         .mac-os-code-block {
           position: relative;
           background: #050505;
           color: #a1a1aa;
-          padding: 3rem 1.5rem 1.5rem 1.5rem; /* Extra top padding for the dots */
+          padding: 3rem 1.5rem 1.5rem 1.5rem; 
           border-radius: 14px;
           border: 1px solid rgba(255, 255, 255, 0.1);
           font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
@@ -485,7 +479,6 @@ export default function Editor() {
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 30px 60px -20px rgba(0, 0, 0, 1);
           line-height: 1.7;
         }
-        /* The Mac OS Buttons */
         .mac-os-code-block::before {
           content: '';
           position: absolute;
@@ -518,7 +511,6 @@ export default function Editor() {
           }
         }
 
-        /* Elegant Syntax Highlighting */
         .hljs-keyword, .hljs-operator { color: #c678dd; } 
         .hljs-built_in, .hljs-type, .hljs-class .hljs-title { color: #e5c07b; font-weight: 500; } 
         .hljs-literal, .hljs-number { color: #d19a66; } 
@@ -536,7 +528,6 @@ export default function Editor() {
           line-height: 1.8;
         }
 
-        /* Invisible Sleek Scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
           width: 5px;
           height: 5px;
@@ -564,31 +555,27 @@ export default function Editor() {
           100% { transform: translateX(100%); }
         }
 
-        /* 👑 Sci-Fi Ring Spinner for AI */
         @keyframes spin-gradient {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
       `}</style>
 
-      {/* 🔮 CINEMATIC AI LOADING OVERLAY */}
+      {/* 🔥 THE BUG FIX: SOLID TEXT + DROP SHADOW TO PREVENT CLIPPING ISSUES 🔥 */}
       {isLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="flex flex-col items-center gap-6">
             <div className="relative w-20 h-20 flex items-center justify-center">
-              {/* Outer Glowing Ring */}
               <div className="absolute inset-0 rounded-full border border-white/5 bg-transparent"></div>
-              {/* Spinning Gradient Segment */}
               <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-violet-500 animate-[spin-gradient_1s_linear_infinite] shadow-[0_0_30px_rgba(139,92,246,0.6)]"></div>
-              {/* Inner Core */}
               <div className="w-8 h-8 bg-violet-500/20 rounded-full animate-pulse shadow-[inset_0_0_15px_rgba(139,92,246,0.8)]"></div>
             </div>
-            <span className="bg-gradient-to-r from-zinc-100 to-zinc-500 -webkit-background-clip-text text-transparent font-mono tracking-[0.25em] text-xs font-bold uppercase">Processing Query...</span>
+            {/* This is completely safe and won't turn into a white block */}
+            <span className="text-zinc-200 font-mono tracking-[0.2em] text-xs font-bold uppercase drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Processing Query...</span>
           </div>
         </div>
       )}
 
-      {/* 💎 FLOATING GLASS ISLAND TOP-NAV (Dynamic Island Style) */}
       <div className="absolute top-4 md:top-6 left-0 right-0 z-30 flex justify-center pointer-events-none px-4">
         <div className="bg-[#0a0a0a]/80 backdrop-blur-3xl px-4 sm:px-6 py-3 border border-white/[0.08] shadow-[0_20px_40px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.1)] rounded-2xl flex items-center justify-between w-full max-w-[1200px] pointer-events-auto transition-all">
           <div className="flex items-center gap-3 shrink-0">
@@ -639,7 +626,6 @@ export default function Editor() {
         </div>
       </div>
       
-      {/* 🌌 EDITOR CONTENT WRAPPER */}
       <div className="flex-1 overflow-y-auto w-full relative bg-transparent custom-scrollbar scroll-smooth z-10 pt-24 md:pt-32">
         <div className="relative z-10">
           <DocumentHeader />
@@ -657,7 +643,6 @@ export default function Editor() {
         </div>
       </div>
 
-      {/* 🔥 FLOATING BOTTOM TOOLBAR */}
       {canWrite && (
         <div className="absolute bottom-4 sm:bottom-6 md:bottom-10 left-0 right-0 flex justify-center z-50 pointer-events-none animate-in slide-in-from-bottom-8 fade-in duration-500">
            <div className="pointer-events-auto">
