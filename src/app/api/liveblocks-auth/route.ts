@@ -10,8 +10,9 @@ export async function POST(request: Request) {
     const { userId: clerkId } = await auth(); 
     const user = clerkId ? await currentUser() : null; 
     
-    // Request body se room ID nikalna
-    const body = await request.json();
+    // 🔥 THE CRITICAL FIX: Safely parse the body to prevent silent 500 crashes
+    const text = await request.text();
+    const body = text ? JSON.parse(text) : {};
     const room = body.room;
 
     const isGuest = !clerkId;
@@ -24,35 +25,41 @@ export async function POST(request: Request) {
       color: ["#F87171", "#60A5FA", "#34D399", "#FBBF24", "#A78BFA"][Math.floor(Math.random() * 5)],
     };
 
-    // 🔥 THE MASTER FIX: Intercept and Fix "Private" Rooms Automatically!
+    // Use prepareSession to strictly enforce permissions bypassing any config limits
+    const session = liveblocks.prepareSession(liveblocksUserId, { userInfo });
+
     if (room) {
-      let roomData = await liveblocks.getRoom(room).catch(() => null);
-
-      if (!roomData) {
-        // Condition 1: Agar room bilkul nahi bana hai, toh "Public Edit" ke sath banao
-        await liveblocks.createRoom(room, {
-          defaultAccesses: ["room:write"],
-          usersAccesses: clerkId ? { [clerkId]: ["room:write"] } : {}
-        });
-      } else {
-        // Condition 2: Agar Frontend ne chup-chap Private room bana diya hai, toh usko OVERRIDE karo!
-        const isPrivateByDefault = !roomData.defaultAccesses || roomData.defaultAccesses.length === 0;
-        const hasNoOwner = !roomData.usersAccesses || Object.keys(roomData.usersAccesses).length === 0;
-
-        if (isPrivateByDefault && hasNoOwner) {
-          await liveblocks.updateRoom(room, {
-            defaultAccesses: ["room:write"], // Zabardasti "Can Edit" daal do
-            usersAccesses: clerkId ? { [clerkId]: ["room:write"] } : {}
-          });
-        }
+      let roomData = null;
+      try {
+        roomData = await liveblocks.getRoom(room);
+      } catch (e) {
+        // Room not created on Liveblocks yet
       }
+
+      if (roomData) {
+        const defaultAccesses = roomData.defaultAccesses || [];
+        const usersAccesses = roomData.usersAccesses || {};
+
+        // 3 Golden Rules
+        const isOwner = clerkId && usersAccesses[clerkId]?.includes("room:write");
+        const isPublicEdit = defaultAccesses.includes("room:write");
+        const isUntouched = defaultAccesses.length === 0 && Object.keys(usersAccesses).length === 0;
+
+        // Give access if Owner, OR public link, OR untouched new room
+        if (isOwner || isPublicEdit || isUntouched) {
+          session.allow(room, session.FULL_ACCESS);
+        } else {
+          session.allow(room, session.READ_ACCESS); // Lock strictly
+        }
+      } else {
+        // Let the first user in to trigger auto-creation
+        session.allow(room, session.FULL_ACCESS);
+      }
+    } else {
+      session.allow("*", session.FULL_ACCESS);
     }
 
-    // Ab official ID tokens generate karo. Database ab 100% sahi permissions dega.
-    const { status, body: authBody } = await liveblocks.identifyUser(
-      { userId: liveblocksUserId, groupIds: [] },
-      { userInfo }
-    );
+    const { status, body: authBody } = await session.authorize();
     
     return new Response(authBody, { 
       status, 
@@ -61,6 +68,6 @@ export async function POST(request: Request) {
     
   } catch (error) {
     console.error("Liveblocks auth error:", error);
-    return new Response(JSON.stringify({ error: "Auth failed" }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Auth process failed" }), { status: 500 });
   }
 }

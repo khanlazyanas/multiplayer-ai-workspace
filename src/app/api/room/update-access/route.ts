@@ -9,31 +9,31 @@ const liveblocks = new Liveblocks({
 export async function POST(req: Request) {
   try {
     const { userId } = await auth(); 
-    const { roomId, accessType } = await req.json();
+    
+    // Safely parse body here as well just in case
+    const text = await req.text();
+    const body = text ? JSON.parse(text) : {};
+    const { roomId, accessType } = body;
 
     if (!roomId || !accessType) {
       return new NextResponse("Missing parameters", { status: 400 });
     }
 
-    // "write" = Can Edit, "read" = Can View (Locked)
     const defaultAccesses = accessType === "write" 
       ? ["room:write"] 
       : ["room:read", "room:presence:write"];
 
-    // Owner ko hamesha VIP (Write) access rahega
     const usersAccesses: any = {};
     if (userId) {
       usersAccesses[userId] = ["room:write"];
     }
 
     try {
-      // Update room in Liveblocks DB
       await liveblocks.updateRoom(roomId, {
         defaultAccesses: defaultAccesses as any,
         usersAccesses: usersAccesses
       });
     } catch (e) {
-      // Fallback agar room nahi tha
       await liveblocks.createRoom(roomId, {
         defaultAccesses: defaultAccesses as any,
         usersAccesses: usersAccesses
