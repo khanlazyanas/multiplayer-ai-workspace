@@ -85,7 +85,8 @@ export default function Editor() {
     ],
     editorProps: {
       attributes: {
-        class: "focus:outline-none min-h-full text-zinc-300 text-base md:text-lg cursor-text leading-relaxed ProseMirror pb-32 selection:bg-violet-500/30 selection:text-violet-100",
+        // 🔥 Added pb-40 to give space at the bottom for the floating toolbar
+        class: "focus:outline-none min-h-full text-zinc-300 text-base md:text-lg cursor-text leading-relaxed ProseMirror pb-40 pt-4 selection:bg-violet-500/30 selection:text-violet-100",
       },
       handleKeyDown: (view, event) => {
         if (!canWrite) return true; 
@@ -134,7 +135,8 @@ export default function Editor() {
               const cleanText = text.trim();
               const rawHTML = await marked.parse(cleanText); 
 
-              const finalContent = `<blockquote><p><strong style="background: linear-gradient(to right, #c084fc, #818cf8); -webkit-background-clip: text; color: transparent;">✦ AI Intelligence:</strong></p>${rawHTML}</blockquote><p></p>`;
+              // 🔥 FIX: The white box error is solved by using clean color classes instead of background-clip
+              const finalContent = `<blockquote><p><strong style="color: #c084fc; text-shadow: 0 0 10px rgba(192, 132, 252, 0.4);">✦ AI Intelligence:</strong></p>${rawHTML}</blockquote><p></p>`;
 
               if (editor) {
                 editor.commands.insertContent(finalContent);
@@ -202,7 +204,8 @@ export default function Editor() {
       const cleanText = text.trim();
       const rawHTML = await marked.parse(cleanText); 
 
-      const finalContent = `<blockquote><p><strong style="background: linear-gradient(to right, #c084fc, #818cf8); -webkit-background-clip: text; color: transparent;">✦ AI Intelligence:</strong></p>${rawHTML}</blockquote><p></p>`;
+      // 🔥 FIX: White box fixed here too
+      const finalContent = `<blockquote><p><strong style="color: #c084fc; text-shadow: 0 0 10px rgba(192, 132, 252, 0.4);">✦ AI Intelligence:</strong></p>${rawHTML}</blockquote><p></p>`;
 
       editor.commands.insertContent(finalContent);
     })
@@ -355,7 +358,6 @@ export default function Editor() {
   return (
     <div className="w-full max-w-[1400px] mx-auto md:my-6 lg:my-8 bg-[#030303] md:rounded-[28px] shadow-[0_0_80px_rgba(0,0,0,0.8)] border-y md:border border-white/[0.04] overflow-hidden relative flex flex-col h-[100dvh] md:h-[88vh] lg:h-[90vh] transition-all ring-1 ring-black">
       
-      {/* 🌟 AMBIENT GLOWS */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-32 bg-violet-600/10 blur-[100px] pointer-events-none z-0"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-600/5 blur-[120px] pointer-events-none z-0"></div>
 
@@ -418,17 +420,14 @@ export default function Editor() {
         </div>
       )}
 
-      {/* 🔥 MOBILE RESPONSIVENESS FIXES ADDED HERE */}
       <style>{`
         .lb-root {
           --lb-z-index: 999999 !important; 
         }
 
-        /* 🚀 TOP 1% UI: AI BLOCKQUOTE */
         .ProseMirror blockquote {
           position: relative;
           border-left: 2px solid transparent;
-          /* Reduced margins/paddings for Mobile */
           margin: 1.25rem 0;
           background: linear-gradient(145deg, rgba(139, 92, 246, 0.08) 0%, rgba(139, 92, 246, 0.01) 100%);
           padding: 1rem 1.25rem;
@@ -440,7 +439,7 @@ export default function Editor() {
         }
         .ProseMirror blockquote p {
           margin-bottom: 0.85rem;
-          line-height: 1.6; /* Tighter on mobile */
+          line-height: 1.6;
           color: #e4e4e7;
           font-weight: 400;
         }
@@ -448,7 +447,6 @@ export default function Editor() {
           margin-bottom: 0;
         }
         
-        /* 🚀 INLINE CODE */
         .ProseMirror code {
           background-color: rgba(168, 85, 247, 0.08); 
           color: #d8b4fe; 
@@ -469,11 +467,9 @@ export default function Editor() {
           box-shadow: none !important;
         }
 
-        /* 🚀 CODE BLOCKS */
         .ProseMirror pre {
           background: #050505;
           color: #a1a1aa;
-          /* Reduced for Mobile */
           padding: 1rem;
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.08);
@@ -485,7 +481,6 @@ export default function Editor() {
           line-height: 1.6;
         }
 
-        /* Desktop Spacing Adjustments */
         @media (min-width: 640px) {
           .ProseMirror blockquote {
             margin: 2.5rem 0;
@@ -519,7 +514,6 @@ export default function Editor() {
           line-height: 1.7;
         }
 
-        /* Custom Invisible/Hover Scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
           height: 6px;
@@ -558,12 +552,12 @@ export default function Editor() {
               <div className="w-2.5 h-2.5 bg-violet-400 rounded-full animate-bounce [animation-delay:-0.15s] shadow-[0_0_10px_rgba(167,139,250,0.8)] relative z-10"></div>
               <div className="w-2.5 h-2.5 bg-violet-400 rounded-full animate-bounce shadow-[0_0_10px_rgba(167,139,250,0.8)] relative z-10"></div>
             </div>
-            <span className="bg-gradient-to-r from-zinc-100 to-zinc-400 -webkit-background-clip-text text-transparent">Synthesizing intelligence...</span>
+            <span className="text-zinc-200">Synthesizing intelligence...</span>
           </div>
         </div>
       )}
 
-      {/* 💎 FROSTED GLASS TOOLBAR */}
+      {/* 💎 FROSTED GLASS TOP-NAV */}
       <div className="bg-[#030303]/70 backdrop-blur-3xl px-3 sm:px-6 py-3 border-b border-white/[0.04] flex items-center justify-between shrink-0 overflow-x-auto z-20 no-scrollbar shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative">
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="hidden sm:flex p-1.5 bg-zinc-900/50 rounded-lg border border-white/[0.05] shadow-inner">
@@ -614,17 +608,13 @@ export default function Editor() {
       
       {/* 🌌 DEV GRID BACKGROUND + EDITOR CONTENT */}
       <div className="flex-1 overflow-y-auto w-full relative bg-transparent custom-scrollbar scroll-smooth z-10">
-        
-        {/* Subtle Next-Gen Tech Grid */}
         <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `linear-gradient(to right, #80808012 1px, transparent 1px), linear-gradient(to bottom, #80808012 1px, transparent 1px)`, backgroundSize: `24px 24px` }}></div>
 
         <div className="relative z-10">
           <DocumentHeader />
         </div>
         
-        {/* 🔥 MOBILE FIX: Adjusted outer container padding (px-2 py-4 on mobile) to utilize max width */}
-        <div className="px-2 py-4 sm:px-6 sm:py-6 md:p-12 max-w-[850px] mx-auto w-full relative lb-root lb-dark z-10">
-          {canWrite && <Toolbar editor={editor} onAskAI={handleAskAI} />}
+        <div className="px-3 py-4 sm:px-6 sm:py-6 md:p-12 max-w-[850px] mx-auto w-full relative lb-root lb-dark z-10">
           {canWrite && <FloatingBubbleMenu editor={editor} />}
           
           <div className="z-[99999] relative">
@@ -635,6 +625,14 @@ export default function Editor() {
           <EditorContent editor={editor} className="w-full h-full mt-4" />
         </div>
       </div>
+
+      {/* 🔥 FIX: FLOATING TOOLBAR STICKY AT BOTTOM */}
+      {canWrite && (
+        <div className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+           <Toolbar editor={editor} onAskAI={handleAskAI} />
+        </div>
+      )}
+
     </div>
   );
 }
