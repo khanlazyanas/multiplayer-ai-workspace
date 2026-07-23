@@ -7,12 +7,10 @@ const liveblocks = new Liveblocks({
 
 export async function POST(request: Request) {
   try {
-    // FIX: Added 'await' before auth() to resolve the Promise
     const { userId: clerkId } = await auth(); 
     const user = clerkId ? await currentUser() : null; 
     const { room } = await request.json();
 
-    // Differentiate between authenticated owners and anonymous mobile guests
     const isGuest = !clerkId;
     const liveblocksUserId = isGuest ? `guest-${Math.random().toString(36).slice(2, 10)}` : clerkId;
 
@@ -26,28 +24,28 @@ export async function POST(request: Request) {
     const session = liveblocks.prepareSession(liveblocksUserId, { userInfo });
 
     if (room) {
-      // Safely fetch room data; if it fails, roomData will be null
       const roomData = await liveblocks.getRoom(room).catch(() => null);
 
-      if (roomData) {
-        const defaultAccesses = roomData.defaultAccesses || [];
-        const usersAccesses = roomData.usersAccesses || {};
+      let accessType = "write";
+      let ownerId: string | null = null; // Explicitly defining the type here
 
-        // Verify access rules
-        const isOwner = usersAccesses[liveblocksUserId]?.includes("room:write");
-        const isVirginRoom = defaultAccesses.length === 0 && Object.keys(usersAccesses).length === 0;
-        const isPublicEdit = defaultAccesses.includes("room:write");
+      // Agar room ka data milta hai, toh apne lagaye hue 'Tags' (Metadata) padho
+      if (roomData && roomData.metadata) {
+        // 🔥 FIX: Added 'as string' to satisfy TypeScript's strict type checking
+        accessType = (roomData.metadata.access as string) || "write";
+        ownerId = (roomData.metadata.ownerId as string) || null;
+      }
 
-        if (isOwner || isVirginRoom || isPublicEdit) {
-          // Grant full access to owners and users in public edit rooms
-          session.allow(room, session.FULL_ACCESS);
-        } else {
-          // Restrict guests to read-only access
-          session.allow(room, session.READ_ACCESS);
-        }
-      } else {
-        // Allow access to initialize the room if it doesn't exist yet
+      // 👑 THE MASTER RULE: Kya tum is document ke Owner ho?
+      const isOwner = clerkId && (ownerId === clerkId);
+
+      // Agar tum Owner ho, YA document "Can Edit" par set hai -> Full Access 
+      if (isOwner || accessType === "write") {
         session.allow(room, session.FULL_ACCESS);
+      } 
+      // Agar "Read-Only" set hai, toh baaki sab (Guests & Friends) yahan lock ho jayenge!
+      else {
+        session.allow(room, session.READ_ACCESS);
       }
     } else {
       session.allow("*", session.FULL_ACCESS);

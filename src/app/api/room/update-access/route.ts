@@ -8,7 +8,6 @@ const liveblocks = new Liveblocks({
 
 export async function POST(req: Request) {
   try {
-    // FIX: Added 'await' because auth() returns a Promise in newer Clerk versions
     const { userId } = await auth(); 
     
     if (!userId) {
@@ -21,18 +20,32 @@ export async function POST(req: Request) {
       return new NextResponse("Missing parameters", { status: 400 });
     }
 
-    // Determine permissions for guests based on the selected access type
-    const defaultAccesses = accessType === "write" 
-      ? ["room:write"] 
-      : ["room:read", "room:presence:write"];
+    let room;
+    try {
+      room = await liveblocks.getRoom(roomId);
+    } catch (e) {
+      room = null; // Agar room nahi bana hai
+    }
 
-    // Force save the current user as the explicit owner to prevent lockouts
-    await liveblocks.updateRoom(roomId, {
-      defaultAccesses: defaultAccesses as any,
-      usersAccesses: {
-        [userId]: ["room:write"], 
-      } as any,
-    });
+    if (room) {
+      // Agar room pehle se hai, toh sirf uska Metadata 'Tag' update karo
+      await liveblocks.updateRoom(roomId, {
+        metadata: {
+          ...room.metadata,
+          access: accessType, // "write" ya "read"
+          ownerId: room.metadata.ownerId || userId, // Tumhe hamesha ke liye Owner bana dega
+        }
+      });
+    } else {
+      // Agar room ekdum naya hai, toh usko create karo aur Tag lagao
+      await liveblocks.createRoom(roomId, {
+        defaultAccesses: [], // Inko khali chhod do taaki Liveblocks beech mein tang na adaye
+        metadata: {
+          access: accessType,
+          ownerId: userId,
+        }
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
