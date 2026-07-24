@@ -138,7 +138,7 @@ export default function Editor() {
                 const startPos = editor.state.selection.from;
                 
                 // Live typing indicator
-                editor.commands.insertText("✨ AI Synapse is writing...\n\n");
+                editor.commands.insertContent("✨ AI Synapse is writing...\n\n");
 
                 const reader = res.body.getReader();
                 const decoder = new TextDecoder();
@@ -152,7 +152,7 @@ export default function Editor() {
                   const chunk = decoder.decode(value, { stream: true });
                   if (chunk) {
                     fullResponseText += chunk;
-                    editor.commands.insertText(chunk);
+                    editor.commands.insertContent(chunk);
                   }
                 }
 
@@ -234,7 +234,7 @@ export default function Editor() {
       // Same rock-solid logic for the toolbar button
       editor.commands.insertContent('<p></p>');
       const startPos = editor.state.selection.from;
-      editor.commands.insertText("✨ AI Synapse is writing...\n\n");
+      editor.commands.insertContent("✨ AI Synapse is writing...\n\n");
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -247,7 +247,7 @@ export default function Editor() {
         const chunk = decoder.decode(value, { stream: true });
         if (chunk) {
           fullResponseText += chunk;
-          editor.commands.insertText(chunk);
+          editor.commands.insertContent(chunk);
         }
       }
 
