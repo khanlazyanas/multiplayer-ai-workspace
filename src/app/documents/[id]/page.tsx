@@ -3,8 +3,9 @@
 import { CollaborativeRoom } from "@/components/live/CollaborativeRoom";
 import { LiveCursors } from "@/components/live/LiveCursors";
 import Editor from "@/components/editor/Editor"; 
-import Canvas from "@/components/editor/Canvas"; // 🔥 FIX: Imported Canvas Component
-import { useMyPresence, useOthersListener } from "@liveblocks/react/suspense"; 
+import Canvas from "@/components/editor/Canvas"; 
+// 🔥 FIX: Changed to useUpdateMyPresence to prevent massive re-renders
+import { useUpdateMyPresence, useOthersListener } from "@liveblocks/react/suspense"; 
 import { UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -14,11 +15,11 @@ import { ActiveCollaborators } from "@/components/live/ActiveCollaborators";
 import { useParams } from "next/navigation"; 
 
 function WorkspaceCanvas({ roomId }: { roomId: string }) {
-  const [, updateMyPresence] = useMyPresence();
+  // 🔥 FIX: This will update cursor position without re-rendering the whole page!
+  const updateMyPresence = useUpdateMyPresence();
+  
   const { isLoaded, isSignedIn } = useAuth();
   const [isCopying, setIsCopying] = useState(false);
-  
-  // 🔥 THE SWITCH: Workspace mode state
   const [activeMode, setActiveMode] = useState<"document" | "canvas">("document");
 
   useEffect(() => {
@@ -71,10 +72,7 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
     >
       <LiveCursors />
       
-      {/* MINIMALIST ONYX HEADER */}
       <header className="flex items-center justify-between px-4 sm:px-6 py-3 bg-black/80 backdrop-blur-2xl border-b border-zinc-800/80 sticky top-0 z-50">
-        
-        {/* Left: Branding & Info */}
         <div className="flex items-center gap-4 sm:gap-5 w-1/3">
           <Link 
             href="/" 
@@ -99,11 +97,8 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
           </div>
         </div>
 
-        {/* Center: 🔥 SCI-FI MODE TOGGLE */}
         <div className="flex justify-center w-1/3">
           <div className="flex bg-[#050505] p-1 rounded-xl border border-zinc-800 shadow-[inset_0_2px_5px_rgba(0,0,0,0.8)] relative">
-            
-            {/* Sliding Highlight */}
             <div 
               className={`absolute top-1 bottom-1 w-[90px] sm:w-[110px] bg-zinc-800 rounded-lg shadow-sm transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${activeMode === 'document' ? 'left-1' : 'left-[94px] sm:left-[114px]'}`}
             ></div>
@@ -125,7 +120,6 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
           </div>
         </div>
 
-        {/* Right: Actions & User */}
         <div className="flex items-center justify-end gap-3 sm:gap-5 w-1/3">
           <button 
             onClick={handleShare}
@@ -155,9 +149,7 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
         </div>
       </header>
 
-      {/* 🚀 DYNAMIC MAIN CONTENT AREA */}
       <main className={`flex-1 relative w-full z-10 ${activeMode === 'document' ? 'overflow-y-auto py-10 px-4 md:px-0 flex justify-center' : 'overflow-hidden bg-[#111111]'}`}>
-        
         {activeMode === "document" ? (
           <>
             <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-violet-900/10 blur-[120px] rounded-full pointer-events-none"></div>
@@ -170,7 +162,6 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
             <Canvas />
           </div>
         )}
-
       </main>
     </div>
   );
@@ -178,9 +169,7 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
 
 export default function RoomPage() {
   const params = useParams();
-  
   const safeRoomId = (params?.id as string) || "default-room";
-  
   if (!params?.id) return null;
   
   return (
