@@ -132,43 +132,43 @@ export default function Editor() {
 
               setIsLoading(false); 
 
-              const responseId = `ai-response-${Date.now()}`;
-              
-              const aiHeader = `<blockquote class="ai-blockquote" id="${responseId}"><p><strong style="color: #e9d5ff; text-shadow: 0 0 20px rgba(216, 180, 254, 0.7); display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -0.02em;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #c084fc; drop-shadow: 0 0 5px rgba(192, 132, 252, 0.5);"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> AI Synapse</strong></p><p class="ai-stream-content"></p></blockquote><p></p>`;
-              
               if (editor) {
-                editor.commands.insertContent(aiHeader);
-              }
-
-              const reader = res.body.getReader();
-              const decoder = new TextDecoder();
-              let fullResponseText = "";
-              
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+                // Ek nayi line add karo jahan AI likhna shuru karega
+                editor.commands.insertContent('<p></p>');
+                const startPos = editor.state.selection.from;
                 
-                const chunk = decoder.decode(value, { stream: true });
-                if (chunk) {
-                  fullResponseText += chunk;
+                // Live typing indicator
+                editor.commands.insertText("✨ AI Synapse is writing...\n\n");
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponseText = "";
+                
+                // NATIVE TIPTAP STREAMING - Secure & Liveblocks compatible
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
                   
-                  const streamContainer = document.querySelector(`#${responseId} .ai-stream-content`);
-                  if (streamContainer) {
-                    streamContainer.innerHTML += chunk.replace(/\n/g, '<br/>');
+                  const chunk = decoder.decode(value, { stream: true });
+                  if (chunk) {
+                    fullResponseText += chunk;
+                    editor.commands.insertText(chunk);
                   }
                 }
-              }
 
-              if (editor && fullResponseText) {
-                const rawHTML = await marked.parse(fullResponseText.trim());
-                const finalContent = `<blockquote class="ai-blockquote"><p><strong style="color: #e9d5ff; text-shadow: 0 0 20px rgba(216, 180, 254, 0.7); display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -0.02em;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #c084fc; drop-shadow: 0 0 5px rgba(192, 132, 252, 0.5);"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> AI Synapse</strong></p>${rawHTML}</blockquote><p></p>`;
-                
-                const oldBlock = document.getElementById(responseId);
-                if (oldBlock) {
-                  oldBlock.outerHTML = finalContent;
+                // Jaise hi streaming khtm ho, pura data select karke replace kardo beautiful markdown blockquote se
+                const endPos = editor.state.selection.to;
+
+                if (fullResponseText) {
+                  const rawHTML = await marked.parse(fullResponseText.trim());
+                  const finalContent = `<blockquote class="ai-blockquote"><p><strong style="color: #e9d5ff; text-shadow: 0 0 20px rgba(216, 180, 254, 0.7); display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -0.02em;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #c084fc; drop-shadow: 0 0 5px rgba(192, 132, 252, 0.5);"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> AI Synapse</strong></p>${rawHTML}</blockquote><p></p>`;
+                  
+                  editor.chain()
+                    .deleteRange({ from: startPos, to: endPos })
+                    .insertContent(finalContent)
+                    .focus()
+                    .run();
                 }
-                
-                editor.commands.focus();
               }
             })
             .catch((err) => {
@@ -231,10 +231,10 @@ export default function Editor() {
 
       setIsLoading(false);
 
-      const responseId = `ai-response-${Date.now()}`;
-      const aiHeader = `<blockquote class="ai-blockquote" id="${responseId}"><p><strong style="color: #e9d5ff; text-shadow: 0 0 20px rgba(216, 180, 254, 0.7); display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -0.02em;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #c084fc; drop-shadow: 0 0 5px rgba(192, 132, 252, 0.5);"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> AI Synapse</strong></p><p class="ai-stream-content"></p></blockquote><p></p>`;
-      
-      editor.commands.insertContent(aiHeader);
+      // Same rock-solid logic for the toolbar button
+      editor.commands.insertContent('<p></p>');
+      const startPos = editor.state.selection.from;
+      editor.commands.insertText("✨ AI Synapse is writing...\n\n");
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -247,23 +247,21 @@ export default function Editor() {
         const chunk = decoder.decode(value, { stream: true });
         if (chunk) {
           fullResponseText += chunk;
-          const streamContainer = document.querySelector(`#${responseId} .ai-stream-content`);
-          if (streamContainer) {
-            streamContainer.innerHTML += chunk.replace(/\n/g, '<br/>');
-          }
+          editor.commands.insertText(chunk);
         }
       }
+
+      const endPos = editor.state.selection.to;
 
       if (editor && fullResponseText) {
         const rawHTML = await marked.parse(fullResponseText.trim());
         const finalContent = `<blockquote class="ai-blockquote"><p><strong style="color: #e9d5ff; text-shadow: 0 0 20px rgba(216, 180, 254, 0.7); display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -0.02em;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #c084fc; drop-shadow: 0 0 5px rgba(192, 132, 252, 0.5);"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> AI Synapse</strong></p>${rawHTML}</blockquote><p></p>`;
         
-        const oldBlock = document.getElementById(responseId);
-        if (oldBlock) {
-          oldBlock.outerHTML = finalContent;
-        }
-        
-        editor.commands.focus();
+        editor.chain()
+          .deleteRange({ from: startPos, to: endPos })
+          .insertContent(finalContent)
+          .focus()
+          .run();
       }
     })
     .catch((err) => {
@@ -491,6 +489,7 @@ export default function Editor() {
           --lb-z-index: 999999 !important; 
         }
 
+        /* 💎 GOD-TIER AI BLOCKQUOTE */
         .ai-blockquote {
           position: relative;
           border: 1px solid rgba(168, 85, 247, 0.15);
@@ -641,13 +640,10 @@ export default function Editor() {
         </div>
       )}
 
-      {/* 🔥 THE BUG FIX: Outer wrapper with `overflow-hidden` perfectly masks scrolling content 🔥 */}
       <div className="absolute top-4 md:top-8 left-0 right-0 z-30 flex justify-center pointer-events-none px-3 sm:px-4">
         
-        {/* Outer Container (Maintains background and corners) */}
         <div className="bg-[#050505]/70 backdrop-blur-[40px] saturate-200 border border-white/[0.08] shadow-[0_30px_60px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.1)] rounded-[1.5rem] w-full max-w-[1200px] pointer-events-auto transition-all overflow-hidden">
           
-          {/* Inner scrolling track */}
           <div className="flex items-center justify-between px-4 sm:px-8 py-3.5 w-full overflow-x-auto no-scrollbar">
             
             <div className="flex items-center gap-3 sm:gap-4 shrink-0">
