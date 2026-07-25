@@ -1,9 +1,10 @@
 "use client";
 
-import { memo } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import "tldraw/tldraw.css";
 
+// Dynamic import with no SSR
 const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), { 
   ssr: false,
   loading: () => (
@@ -13,13 +14,20 @@ const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), {
   )
 });
 
-// 🔥 THE GOD-TIER LOCK: '() => true' guarantees this Canvas WILL NEVER re-render or unmount accidentally!
-const Canvas = memo(function Canvas() {
+export default function Canvas() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
     <div className="absolute inset-0 w-full h-full bg-[#111111] z-50">
+      {/* 🔥 FIX: Removed persistenceKey. 
+          Ab 2 tabs kholne par IndexedDB crash nahi hoga! */}
       <Tldraw />
     </div>
   );
-}, () => true);
-
-export default Canvas;
+}
