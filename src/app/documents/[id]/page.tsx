@@ -88,27 +88,17 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
         </div>
       </header>
 
-      {/* 🔥 THE GOD-TIER FIX: SIMULTANEOUS MOUNTING */}
-      {/* Editor aur Canvas hamesha DOM me zinda rahenge, hum bas unhe hide/show kar rahe hain. Isse WebGL kabhi crash nahi hoga! */}
-      <main className="flex-1 relative w-full z-10 overflow-hidden bg-black">
-        
-        {/* 📝 EDITOR LAYER */}
-        <div 
-          className={`absolute inset-0 w-full h-full overflow-y-auto py-10 px-4 md:px-0 flex justify-center transition-opacity duration-300 ${activeMode === 'document' ? 'opacity-100 z-20 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}
-        >
-          <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-violet-900/10 blur-[120px] rounded-full pointer-events-none"></div>
-          <div className="w-full max-w-4xl bg-[#0A0A0A] border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-xl p-8 md:p-16 min-h-[850px] relative">
+      {/* 🔥 THE FINAL LAYOUT: Clean conditional rendering */}
+      <main className="flex-1 relative w-full overflow-hidden bg-[#0a0a0a]">
+        {activeMode === "document" ? (
+          <div className="absolute inset-0 overflow-y-auto flex justify-center z-10">
             <Editor key={roomId} />
           </div>
-        </div>
-
-        {/* 🎨 CANVAS LAYER */}
-        <div 
-          className={`absolute inset-0 w-full h-full bg-[#111111] transition-opacity duration-300 ${activeMode === 'canvas' ? 'opacity-100 z-20 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}
-        >
-          <Canvas />
-        </div>
-
+        ) : (
+          <div className="absolute inset-0 z-10">
+            <Canvas />
+          </div>
+        )}
       </main>
     </div>
   );
