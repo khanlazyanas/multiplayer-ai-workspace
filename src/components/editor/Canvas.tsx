@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import "tldraw/tldraw.css";
 
-// 🔥 CSS IMPORT REMOVED FROM HERE (Bypass Next.js purging)
+// Dynamic import with no SSR
 const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), { 
   ssr: false,
   loading: () => (
@@ -13,10 +15,17 @@ const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), {
 });
 
 export default function Canvas() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
-    // 🔥 FORCE VIEWPORT SIZING: Ab ye parent div par depend nahi karega
-    <div style={{ position: "absolute", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 100 }}>
-      <Tldraw />
+    <div className="absolute inset-0 w-full h-full bg-[#111111] z-50">
+      <Tldraw persistenceKey="tldraw-stable-canvas" />
     </div>
   );
 }

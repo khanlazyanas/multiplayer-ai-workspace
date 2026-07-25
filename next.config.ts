@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 🔥 THE MAGIC FIX: Ye Tldraw (WebGL) ko baar-baar mount/unmount hone se rokega
+  reactStrictMode: false,
+  
   images: {
     remotePatterns: [
       {
