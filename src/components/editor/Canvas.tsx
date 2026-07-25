@@ -1,28 +1,31 @@
 "use client";
 
-import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
+import { Tldraw } from 'tldraw';
 import 'tldraw/tldraw.css';
 
-// 🔥 SSR completely disabled
-const Tldraw = dynamic(() => import('tldraw').then((mod) => mod.Tldraw), { ssr: false });
-
 export default function Canvas() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 🔥 SSR BYPASS: Ye guarantee dega ki Canvas load hone ke baad kabhi unmount/hide na ho.
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#0a0a0a] rounded-2xl z-50">
+        <div className="w-8 h-8 border-2 border-zinc-800 border-t-violet-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
-    // 🔥 THE GOD-TIER FIX: 'fixed' positioning makes it IMPOSSIBLE to collapse. 
-    // top: '72px' ensures it stays exactly below your header.
     <div 
-      className="tl-theme__dark" 
-      style={{ 
-        position: 'fixed', 
-        top: '72px', 
-        left: '0', 
-        right: '0', 
-        bottom: '0', 
-        zIndex: 40,
-        backgroundColor: '#0a0a0a' 
-      }}
+      className="absolute inset-0 w-full h-full z-50 tl-theme__dark overflow-hidden rounded-2xl border border-white/[0.08] shadow-[0_40px_100px_rgba(0,0,0,0.8)]"
+      style={{ minHeight: '800px', backgroundColor: '#0a0a0a' }}
     >
-      <Tldraw />
+      <Tldraw persistenceKey="stable-canvas-v2" />
     </div>
   );
 }

@@ -149,19 +149,23 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
         </div>
       </header>
 
-      <main className={`flex-1 relative w-full z-10 ${activeMode === 'document' ? 'overflow-y-auto py-10 px-4 md:px-0 flex justify-center' : 'overflow-hidden bg-[#111111]'}`}>
+      {/* 🔥 THE FINAL STRICT LAYOUT FIX */}
+      {/* Humne Editor aur Canvas ki position absolute kar di hai taaki ek doosre ka DOM overlap aur flexbox shrink issues khatam ho jayein. */}
+      <main className="flex-1 relative w-full z-10 overflow-hidden bg-black">
+        
         {activeMode === "document" ? (
-          <>
+          <div className="absolute inset-0 w-full h-full overflow-y-auto py-10 px-4 md:px-0 flex justify-center z-10">
             <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-violet-900/10 blur-[120px] rounded-full pointer-events-none"></div>
             <div className="w-full max-w-4xl bg-[#0A0A0A] border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-xl p-8 md:p-16 min-h-[850px] relative z-20">
               <Editor key={roomId} />
             </div>
-          </>
+          </div>
         ) : (
-          <div className="w-full h-full relative">
+          <div className="absolute inset-0 w-full h-full p-4 sm:p-6 md:p-8 bg-[#111111] z-10">
             <Canvas />
           </div>
         )}
+
       </main>
     </div>
   );
