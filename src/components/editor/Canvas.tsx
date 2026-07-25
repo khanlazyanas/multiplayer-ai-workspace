@@ -1,9 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import "tldraw/tldraw.css";
 
-// 🔥 SSR strictly disabled
+// 🔥 CSS IMPORT REMOVED FROM HERE (Bypass Next.js purging)
 const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), { 
   ssr: false,
   loading: () => (
@@ -15,14 +14,9 @@ const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), {
 
 export default function Canvas() {
   return (
-    // 🔥 Strict absolute bounding. No flexbox, no padding traps.
-    <div className="absolute inset-0 w-full h-full z-[100] bg-[#111111]">
-      <Tldraw 
-        // ❌ REMOVED persistenceKey: Yehi wo chiz thi jo 5 second me IndexedDB crash karwa rahi thi!
-        onMount={(editor) => {
-          editor.user.updateUserPreferences({ colorScheme: 'dark' });
-        }}
-      />
+    // 🔥 FORCE VIEWPORT SIZING: Ab ye parent div par depend nahi karega
+    <div style={{ position: "absolute", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 100 }}>
+      <Tldraw />
     </div>
   );
 }

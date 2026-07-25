@@ -1,5 +1,8 @@
 "use client";
 
+// 🔥 THE GOD-TIER FIX: Import CSS globally at the static page level so Next.js CANNOT purge it after 5 seconds!
+import "tldraw/tldraw.css"; 
+
 import { CollaborativeRoom } from "@/components/live/CollaborativeRoom";
 import { LiveCursors } from "@/components/live/LiveCursors";
 import Editor from "@/components/editor/Editor"; 
@@ -62,7 +65,6 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
     <div 
       className="relative flex h-screen flex-col bg-black text-zinc-200 overflow-hidden font-sans custom-scrollbar"
       onPointerMove={(e) => {
-        // 🔥 Liveblocks cursor sync strictly active only in Editor mode
         if (activeMode === "document") {
           updateMyPresence({ cursor: { x: Math.round(e.clientX), y: Math.round(e.clientY) } });
         }
@@ -132,11 +134,10 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
         </div>
       </header>
 
-      {/* 🔥 MAIN MOUNTING AREA */}
       <main className="flex-1 relative w-full overflow-hidden bg-[#111111] z-10">
         
         {activeMode === "document" && (
-          <div className="absolute inset-0 w-full h-full overflow-y-auto py-10 px-4 md:px-0 flex justify-center z-20">
+          <div className="absolute inset-0 w-full h-full overflow-y-auto py-10 px-4 md:px-0 flex justify-center z-20 bg-black">
             <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-violet-900/10 blur-[120px] rounded-full pointer-events-none"></div>
             <div className="w-full max-w-4xl bg-[#0A0A0A] border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-xl p-8 md:p-16 min-h-[850px] relative z-30">
               <Editor key={roomId} />
@@ -144,7 +145,6 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
           </div>
         )}
 
-        {/* The canvas takes full space exclusively when active */}
         {activeMode === "canvas" && (
           <div className="absolute inset-0 z-20">
             <Canvas />
