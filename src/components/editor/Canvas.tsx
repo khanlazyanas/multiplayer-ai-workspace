@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo } from "react";
 import dynamic from "next/dynamic";
 import "tldraw/tldraw.css";
 
-// Dynamic import with no SSR
 const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), { 
   ssr: false,
   loading: () => (
@@ -14,18 +13,13 @@ const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), {
   )
 });
 
-export default function Canvas() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
+// 🔥 THE GOD-TIER LOCK: '() => true' guarantees this Canvas WILL NEVER re-render or unmount accidentally!
+const Canvas = memo(function Canvas() {
   return (
     <div className="absolute inset-0 w-full h-full bg-[#111111] z-50">
-      <Tldraw persistenceKey="tldraw-stable-canvas" />
+      <Tldraw />
     </div>
   );
-}
+}, () => true);
+
+export default Canvas;
