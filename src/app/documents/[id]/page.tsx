@@ -4,7 +4,6 @@ import { CollaborativeRoom } from "@/components/live/CollaborativeRoom";
 import { LiveCursors } from "@/components/live/LiveCursors";
 import Editor from "@/components/editor/Editor"; 
 import Canvas from "@/components/editor/Canvas"; 
-// 🔥 FIX: Changed to useUpdateMyPresence to prevent massive re-renders
 import { useUpdateMyPresence, useOthersListener } from "@liveblocks/react/suspense"; 
 import { UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
@@ -15,7 +14,6 @@ import { ActiveCollaborators } from "@/components/live/ActiveCollaborators";
 import { useParams } from "next/navigation"; 
 
 function WorkspaceCanvas({ roomId }: { roomId: string }) {
-  // 🔥 FIX: This will update cursor position without re-rendering the whole page!
   const updateMyPresence = useUpdateMyPresence();
   
   const { isLoaded, isSignedIn } = useAuth();
@@ -64,13 +62,19 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
     <div 
       className="relative flex h-screen flex-col bg-black text-zinc-200 overflow-hidden font-sans custom-scrollbar selection:bg-violet-500/30 selection:text-violet-200"
       onPointerMove={(e) => {
-        updateMyPresence({ cursor: { x: Math.round(e.clientX), y: Math.round(e.clientY) } });
+        // 🔥 FIX: Only track cursor in document mode to prevent Canvas engine from crashing
+        if (activeMode === "document") {
+          updateMyPresence({ cursor: { x: Math.round(e.clientX), y: Math.round(e.clientY) } });
+        }
       }}
       onPointerLeave={() => {
-        updateMyPresence({ cursor: null });
+        if (activeMode === "document") {
+          updateMyPresence({ cursor: null });
+        }
       }}
     >
-      <LiveCursors />
+      {/* Cursors only render in document mode */}
+      {activeMode === "document" && <LiveCursors />}
       
       <header className="flex items-center justify-between px-4 sm:px-6 py-3 bg-black/80 backdrop-blur-2xl border-b border-zinc-800/80 sticky top-0 z-50">
         <div className="flex items-center gap-4 sm:gap-5 w-1/3">
@@ -149,10 +153,7 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
         </div>
       </header>
 
-      {/* 🔥 THE FINAL STRICT LAYOUT FIX */}
-      {/* Humne Editor aur Canvas ki position absolute kar di hai taaki ek doosre ka DOM overlap aur flexbox shrink issues khatam ho jayein. */}
       <main className="flex-1 relative w-full z-10 overflow-hidden bg-black">
-        
         {activeMode === "document" ? (
           <div className="absolute inset-0 w-full h-full overflow-y-auto py-10 px-4 md:px-0 flex justify-center z-10">
             <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-violet-900/10 blur-[120px] rounded-full pointer-events-none"></div>
@@ -161,11 +162,10 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
             </div>
           </div>
         ) : (
-          <div className="absolute inset-0 w-full h-full p-4 sm:p-6 md:p-8 bg-[#111111] z-10">
+          <div className="absolute inset-0 w-full h-full bg-[#111111] z-10">
             <Canvas />
           </div>
         )}
-
       </main>
     </div>
   );
