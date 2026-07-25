@@ -23,11 +23,15 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
 
   useEffect(() => {
     if (roomId) {
-      const saved = localStorage.getItem("recent_workspaces");
-      let workspaces = saved ? JSON.parse(saved) : [];
-      if (!workspaces.includes(roomId)) {
-        workspaces = [roomId, ...workspaces].slice(0, 6);
-        localStorage.setItem("recent_workspaces", JSON.stringify(workspaces));
+      try {
+        const saved = localStorage.getItem("recent_workspaces");
+        let workspaces = saved ? JSON.parse(saved) : [];
+        if (!workspaces.includes(roomId)) {
+          workspaces = [roomId, ...workspaces].slice(0, 6);
+          localStorage.setItem("recent_workspaces", JSON.stringify(workspaces));
+        }
+      } catch (error) {
+        console.error("Local storage error:", error);
       }
     }
   }, [roomId]);
@@ -45,14 +49,14 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
     });
   };
 
-  // 🔥 THE GOD-TIER FIX: Wrapping Canvas in useMemo ensures Liveblocks re-renders NEVER touch it.
+  // 🔥 Isolate canvas from Liveblocks re-renders to prevent WebGL crash
   const canvasLayer = useMemo(() => {
     return (
       <div className="absolute inset-0 w-full h-full z-20">
         <Canvas />
       </div>
     );
-  }, []); // Empty dependency array means it ONLY mounts once, period.
+  }, []);
 
   if (!isLoaded || !isSignedIn) return null;
 
@@ -107,7 +111,6 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
       </header>
 
       <main className="flex-1 relative w-full overflow-hidden bg-[#111111] z-10">
-        {/* We use CSS logic to hide/show layers instead of unmounting them */}
         <div className={`absolute inset-0 w-full h-full overflow-y-auto py-10 px-4 md:px-0 flex justify-center z-30 transition-opacity duration-300 ${activeMode === 'document' ? 'opacity-100 pointer-events-auto bg-black' : 'opacity-0 pointer-events-none'}`}>
           <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-violet-900/10 blur-[120px] rounded-full pointer-events-none"></div>
           <div className="w-full max-w-4xl bg-[#0A0A0A] border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-xl p-8 md:p-16 min-h-[850px] relative z-40">
@@ -115,7 +118,6 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
           </div>
         </div>
 
-        {/* The memoized Canvas layer */}
         <div className={`absolute inset-0 z-20 transition-opacity duration-300 ${activeMode === 'canvas' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
           {canvasLayer}
         </div>
