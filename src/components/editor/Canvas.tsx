@@ -1,9 +1,9 @@
 "use client";
 
-import { memo } from "react";
 import dynamic from "next/dynamic";
 import "tldraw/tldraw.css";
 
+// 🔥 SSR strictly disabled
 const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), { 
   ssr: false,
   loading: () => (
@@ -13,12 +13,16 @@ const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), {
   )
 });
 
-const Canvas = memo(function Canvas() {
+export default function Canvas() {
   return (
-    <div className="absolute inset-0 w-full h-full z-50">
-      <Tldraw persistenceKey="multiplayer-canvas-v4" />
+    // 🔥 Strict absolute bounding. No flexbox, no padding traps.
+    <div className="absolute inset-0 w-full h-full z-[100] bg-[#111111]">
+      <Tldraw 
+        // ❌ REMOVED persistenceKey: Yehi wo chiz thi jo 5 second me IndexedDB crash karwa rahi thi!
+        onMount={(editor) => {
+          editor.user.updateUserPreferences({ colorScheme: 'dark' });
+        }}
+      />
     </div>
   );
-});
-
-export default Canvas;
+}
