@@ -1,9 +1,9 @@
 "use client";
 
+import { memo } from "react";
 import dynamic from "next/dynamic";
 import "tldraw/tldraw.css";
 
-// 🔥 Ultra clean dynamic import without extra boilerplate
 const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), { 
   ssr: false,
   loading: () => (
@@ -13,10 +13,13 @@ const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), {
   )
 });
 
-export default function Canvas() {
+// 🔥 THE GOD-TIER LOCK: memo + '() => true' ensures React CAN NEVER re-render this component.
+const Canvas = memo(function Canvas() {
   return (
-    <div className="absolute inset-0 w-full h-full bg-[#111111] z-50">
+    <div className="absolute inset-0 w-full h-full bg-[#111111]">
       <Tldraw />
     </div>
   );
-}
+}, () => true);
+
+export default Canvas;
