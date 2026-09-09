@@ -5,7 +5,6 @@ import "tldraw/tldraw.css";
 import { CollaborativeRoom } from "@/components/live/CollaborativeRoom";
 import { LiveCursors } from "@/components/live/LiveCursors";
 import Editor from "@/components/editor/Editor"; 
-import Canvas from "@/components/editor/Canvas"; 
 import { useUpdateMyPresence, useOthersListener } from "@liveblocks/react"; 
 import { UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
@@ -14,12 +13,28 @@ import toast from "react-hot-toast";
 import { DocumentTitle } from "@/components/live/DocumentTitle"; 
 import { ActiveCollaborators } from "@/components/live/ActiveCollaborators"; 
 import { useParams } from "next/navigation"; 
+import dynamic from "next/dynamic";
+
+// 🔥 THE VERCEL FIX: Hum poori Canvas file ko dynamically isolate kar rahe hain.
+const DynamicCanvas = dynamic(() => import("@/components/editor/Canvas"), { 
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 flex items-center justify-center bg-[#111111] z-50">
+      <div className="w-8 h-8 border-2 border-zinc-800 border-t-violet-500 rounded-full animate-spin"></div>
+    </div>
+  )
+});
 
 function WorkspaceCanvas({ roomId }: { roomId: string }) {
   const updateMyPresence = useUpdateMyPresence();
   const { isLoaded, isSignedIn } = useAuth();
+  const [isAuthStable, setIsAuthStable] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [activeMode, setActiveMode] = useState<"document" | "canvas">("document");
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) setIsAuthStable(true);
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
     if (roomId) {
@@ -31,7 +46,7 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
           localStorage.setItem("recent_workspaces", JSON.stringify(workspaces));
         }
       } catch (error) {
-        console.error("Local storage error:", error);
+        console.error("Storage error:", error);
       }
     }
   }, [roomId]);
@@ -49,7 +64,7 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
     });
   };
 
-  if (!isLoaded || !isSignedIn) return null;
+  if (!isAuthStable) return <div className="h-screen w-full bg-black"></div>;
 
   return (
     <div 
@@ -102,24 +117,15 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
       </header>
 
       <main className="flex-1 relative w-full overflow-hidden bg-[#111111] z-10">
-        {/* 🔥 FIX: Both components are permanently mounted to DOM. We only hide them via CSS. */}
-        <div 
-          className={`absolute inset-0 w-full h-full overflow-y-auto py-10 px-4 md:px-0 flex justify-center z-30 bg-black transition-opacity duration-200 ${
-            activeMode === "document" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-          }`}
-        >
+        <div className={`absolute inset-0 w-full h-full overflow-y-auto py-10 px-4 md:px-0 flex justify-center z-30 bg-black transition-all ${activeMode === 'document' ? 'visible opacity-100 pointer-events-auto' : 'invisible opacity-0 pointer-events-none'}`}>
           <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-violet-900/10 blur-[120px] rounded-full pointer-events-none"></div>
           <div className="w-full max-w-4xl bg-[#0A0A0A] border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-xl p-8 md:p-16 min-h-[850px] relative z-40">
             <Editor key={roomId} />
           </div>
         </div>
 
-        <div 
-          className={`absolute inset-0 z-20 transition-opacity duration-200 ${
-            activeMode === "canvas" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-          }`}
-        >
-          <Canvas />
+        <div className={`absolute inset-0 z-20 transition-all ${activeMode === 'canvas' ? 'visible opacity-100 pointer-events-auto' : 'invisible opacity-0 pointer-events-none'}`}>
+          <DynamicCanvas />
         </div>
       </main>
     </div>
