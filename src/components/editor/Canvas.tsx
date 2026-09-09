@@ -1,28 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Tldraw } from "tldraw";
+import dynamic from "next/dynamic";
 import "tldraw/tldraw.css";
 
-export default function Canvas({ roomId }: { roomId: string }) {
-  const [mounted, setMounted] = useState(false);
+// 🔥 200% FIX: Pure dynamic import with absolutely no persistence keys or custom mounts.
+const Tldraw = dynamic(() => import("tldraw").then((mod) => mod.Tldraw), {
+  ssr: false,
+});
 
-  useEffect(() => {
-    // Ye line Next.js ko SSR mein Tldraw chalane se rokti hai
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center bg-[#111111] z-50">
-        <div className="w-8 h-8 border-2 border-zinc-800 border-t-violet-500 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
+export default function Canvas() {
   return (
-    <div className="absolute inset-0 w-full h-full bg-[#111111] z-50">
-      <Tldraw persistenceKey={`tldraw-room-${roomId}`} />
+    <div style={{ width: '100%', height: '100%' }}>
+      <Tldraw />
     </div>
   );
 }
