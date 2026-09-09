@@ -15,22 +15,30 @@ import { ActiveCollaborators } from "@/components/live/ActiveCollaborators";
 import { useParams } from "next/navigation"; 
 import dynamic from "next/dynamic";
 
-// 🔥 THE VERCEL FIX: Hum poori Canvas file ko dynamically isolate kar rahe hain.
+// 🔥 1. ISOLATED CANVAS IMPORT
 const DynamicCanvas = dynamic(() => import("@/components/editor/Canvas"), { 
   ssr: false,
   loading: () => (
-    <div className="absolute inset-0 flex items-center justify-center bg-[#111111] z-50">
+    <div className="absolute inset-0 flex items-center justify-center bg-[#111111]">
       <div className="w-8 h-8 border-2 border-zinc-800 border-t-violet-500 rounded-full animate-spin"></div>
     </div>
   )
 });
 
-function WorkspaceCanvas({ roomId }: { roomId: string }) {
+// 🔥 2. LIVEBLOCKS UI (Header + Editor)
+function WorkspaceUI({ 
+  roomId, 
+  activeMode, 
+  setActiveMode 
+}: { 
+  roomId: string, 
+  activeMode: "document" | "canvas", 
+  setActiveMode: (mode: "document" | "canvas") => void 
+}) {
   const updateMyPresence = useUpdateMyPresence();
   const { isLoaded, isSignedIn } = useAuth();
   const [isAuthStable, setIsAuthStable] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
-  const [activeMode, setActiveMode] = useState<"document" | "canvas">("document");
 
   useEffect(() => {
     if (isLoaded && isSignedIn) setIsAuthStable(true);
@@ -41,12 +49,10 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
       try {
         const saved = localStorage.getItem("recent_workspaces");
         let workspaces = saved ? JSON.parse(saved) : [];
-        if (!workspaces.includes(roomId)) {
-          workspaces = [roomId, ...workspaces].slice(0, 6);
-          localStorage.setItem("recent_workspaces", JSON.stringify(workspaces));
-        }
+        if (!workspaces.includes(roomId)) workspaces = [roomId, ...workspaces].slice(0, 6);
+        localStorage.setItem("recent_workspaces", JSON.stringify(workspaces));
       } catch (error) {
-        console.error("Storage error:", error);
+        console.error(error);
       }
     }
   }, [roomId]);
@@ -64,21 +70,14 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
     });
   };
 
-  if (!isAuthStable) return <div className="h-screen w-full bg-black"></div>;
+  if (!isAuthStable) return null;
 
   return (
-    <div 
-      className="relative flex h-screen flex-col bg-black text-zinc-200 overflow-hidden font-sans custom-scrollbar"
-      onPointerMove={(e) => {
-        if (activeMode === "document") updateMyPresence({ cursor: { x: Math.round(e.clientX), y: Math.round(e.clientY) } });
-      }}
-      onPointerLeave={() => {
-        if (activeMode === "document") updateMyPresence({ cursor: null });
-      }}
-    >
-      {activeMode === "document" && <LiveCursors />}
+    // pointer-events-none ensures clicks pass through to the canvas when it's open
+    <div className="absolute inset-0 flex flex-col pointer-events-none z-20">
       
-      <header className="flex items-center justify-between px-4 sm:px-6 py-3 bg-black/80 backdrop-blur-2xl border-b border-zinc-800/80 sticky top-0 z-50">
+      {/* HEADER (Always clickable: pointer-events-auto) */}
+      <header className="relative z-50 pointer-events-auto flex items-center justify-between px-4 sm:px-6 py-3 bg-black/80 backdrop-blur-2xl border-b border-zinc-800/80">
         <div className="flex items-center gap-4 sm:gap-5 w-1/3">
           <Link href="/" title="Back to Dashboard" className="group flex items-center justify-center w-9 h-9 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-violet-500/50 hover:bg-zinc-800 transition-all shrink-0">
             <svg className="w-4 h-4 text-zinc-400 group-hover:text-violet-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -116,30 +115,50 @@ function WorkspaceCanvas({ roomId }: { roomId: string }) {
         </div>
       </header>
 
-      <main className="flex-1 relative w-full overflow-hidden bg-[#111111] z-10">
-        <div className={`absolute inset-0 w-full h-full overflow-y-auto py-10 px-4 md:px-0 flex justify-center z-30 bg-black transition-all ${activeMode === 'document' ? 'visible opacity-100 pointer-events-auto' : 'invisible opacity-0 pointer-events-none'}`}>
-          <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-violet-900/10 blur-[120px] rounded-full pointer-events-none"></div>
-          <div className="w-full max-w-4xl bg-[#0A0A0A] border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-xl p-8 md:p-16 min-h-[850px] relative z-40">
-            <Editor key={roomId} />
-          </div>
-        </div>
-
-        <div className={`absolute inset-0 z-20 transition-all ${activeMode === 'canvas' ? 'visible opacity-100 pointer-events-auto' : 'invisible opacity-0 pointer-events-none'}`}>
-          <DynamicCanvas />
+      {/* EDITOR AREA */}
+      <main 
+        className={`flex-1 relative w-full overflow-y-auto py-10 px-4 md:px-0 flex justify-center bg-black transition-all duration-300 ${activeMode === 'document' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        onPointerMove={(e) => activeMode === "document" && updateMyPresence({ cursor: { x: Math.round(e.clientX), y: Math.round(e.clientY) } })}
+        onPointerLeave={() => activeMode === "document" && updateMyPresence({ cursor: null })}
+      >
+        {activeMode === "document" && <LiveCursors />}
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-violet-900/10 blur-[120px] rounded-full pointer-events-none"></div>
+        <div className="w-full max-w-4xl bg-[#0A0A0A] border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-xl p-8 md:p-16 min-h-[850px] relative z-40">
+          <Editor key={roomId} />
         </div>
       </main>
+
     </div>
   );
 }
 
+
+// 🔥 3. THE MASTER LAYOUT
 export default function RoomPage() {
   const params = useParams();
   const safeRoomId = (params?.id as string) || "default-room";
+  const [activeMode, setActiveMode] = useState<"document" | "canvas">("document");
+
   if (!params?.id) return null;
   
   return (
-    <CollaborativeRoom roomId={safeRoomId}>
-      <WorkspaceCanvas roomId={safeRoomId} />
-    </CollaborativeRoom>
+    <div className="relative w-full h-screen bg-[#111111] overflow-hidden text-zinc-200 font-sans custom-scrollbar">
+      
+      {/* 🚀 THE GENIUS MOVE: Canvas is rendered completely OUTSIDE Liveblocks! */}
+      {/* 60px padding-top keeps it safely below the header */}
+      <div className={`absolute inset-0 pt-[60px] z-10 transition-opacity duration-300 ${activeMode === 'canvas' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <DynamicCanvas />
+      </div>
+
+      {/* LIVEBLOCKS ROOM (Only wraps the Header and Editor) */}
+      <CollaborativeRoom roomId={safeRoomId}>
+        <WorkspaceUI 
+          roomId={safeRoomId} 
+          activeMode={activeMode} 
+          setActiveMode={setActiveMode} 
+        />
+      </CollaborativeRoom>
+      
+    </div>
   );
 }
