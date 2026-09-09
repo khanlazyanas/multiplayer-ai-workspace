@@ -1,12 +1,18 @@
 "use client";
 
+import { memo } from "react";
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
 
-export default function Canvas() {
+// 🔥 THE TITANIUM SHIELD 🔥
+// '() => true' ka matlab hai Next.js chahe hazar baar koshish kare, 
+// ye component dobara refresh nahi hoga aur Tldraw apni memory nahi bhoolega.
+const Canvas = memo(function Canvas() {
   return (
-    <div className="absolute inset-0 w-full h-full bg-[#111111] z-50">
+    <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', backgroundColor: '#111111' }}>
       <Tldraw />
     </div>
   );
-}
+}, () => true);
+
+export default Canvas;

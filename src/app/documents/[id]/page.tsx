@@ -8,14 +8,13 @@ import Editor from "@/components/editor/Editor";
 import { useUpdateMyPresence, useOthersListener } from "@liveblocks/react"; 
 import { UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import toast from "react-hot-toast"; 
 import { DocumentTitle } from "@/components/live/DocumentTitle"; 
 import { ActiveCollaborators } from "@/components/live/ActiveCollaborators"; 
 import { useParams } from "next/navigation"; 
 import dynamic from "next/dynamic";
 
-// 🔥 1. ISOLATED CANVAS IMPORT
 const DynamicCanvas = dynamic(() => import("@/components/editor/Canvas"), { 
   ssr: false,
   loading: () => (
@@ -25,7 +24,6 @@ const DynamicCanvas = dynamic(() => import("@/components/editor/Canvas"), {
   )
 });
 
-// 🔥 2. LIVEBLOCKS UI (Header + Editor)
 function WorkspaceUI({ 
   roomId, 
   activeMode, 
@@ -73,10 +71,7 @@ function WorkspaceUI({
   if (!isAuthStable) return null;
 
   return (
-    // pointer-events-none ensures clicks pass through to the canvas when it's open
     <div className="absolute inset-0 flex flex-col pointer-events-none z-20">
-      
-      {/* HEADER (Always clickable: pointer-events-auto) */}
       <header className="relative z-50 pointer-events-auto flex items-center justify-between px-4 sm:px-6 py-3 bg-black/80 backdrop-blur-2xl border-b border-zinc-800/80">
         <div className="flex items-center gap-4 sm:gap-5 w-1/3">
           <Link href="/" title="Back to Dashboard" className="group flex items-center justify-center w-9 h-9 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-violet-500/50 hover:bg-zinc-800 transition-all shrink-0">
@@ -115,7 +110,6 @@ function WorkspaceUI({
         </div>
       </header>
 
-      {/* EDITOR AREA */}
       <main 
         className={`flex-1 relative w-full overflow-y-auto py-10 px-4 md:px-0 flex justify-center bg-black transition-all duration-300 ${activeMode === 'document' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onPointerMove={(e) => activeMode === "document" && updateMyPresence({ cursor: { x: Math.round(e.clientX), y: Math.round(e.clientY) } })}
@@ -132,25 +126,24 @@ function WorkspaceUI({
   );
 }
 
-
-// 🔥 3. THE MASTER LAYOUT
 export default function RoomPage() {
   const params = useParams();
   const safeRoomId = (params?.id as string) || "default-room";
   const [activeMode, setActiveMode] = useState<"document" | "canvas">("document");
+
+  // 🔥 DOUBLE LOCK: Cache the exact React Element in memory.
+  // Isse React DOM mein ek hi node banega aur wo permanently zinda rahega.
+  const frozenCanvas = useMemo(() => <DynamicCanvas />, []);
 
   if (!params?.id) return null;
   
   return (
     <div className="relative w-full h-screen bg-[#111111] overflow-hidden text-zinc-200 font-sans custom-scrollbar">
       
-      {/* 🚀 THE GENIUS MOVE: Canvas is rendered completely OUTSIDE Liveblocks! */}
-      {/* 60px padding-top keeps it safely below the header */}
       <div className={`absolute inset-0 pt-[60px] z-10 transition-opacity duration-300 ${activeMode === 'canvas' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <DynamicCanvas />
+        {frozenCanvas}
       </div>
 
-      {/* LIVEBLOCKS ROOM (Only wraps the Header and Editor) */}
       <CollaborativeRoom roomId={safeRoomId}>
         <WorkspaceUI 
           roomId={safeRoomId} 
