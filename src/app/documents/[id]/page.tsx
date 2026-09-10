@@ -14,6 +14,9 @@ import { DocumentTitle } from "@/components/live/DocumentTitle";
 import { ActiveCollaborators } from "@/components/live/ActiveCollaborators"; 
 import { useParams } from "next/navigation"; 
 
+// 🎙️ IMPORT THE AUDIO HUDDLE COMPONENT
+import { AudioHuddle } from "@/components/live/AudioHuddle";
+
 function WorkspaceUI({ 
   roomId, 
   activeMode, 
@@ -127,6 +130,9 @@ export default function RoomPage() {
           <WorkspaceUI roomId={safeRoomId} activeMode={activeMode} setActiveMode={setActiveMode} />
         </CollaborativeRoom>
       </div>
+
+      {/* 🎙️ LAYER 3 (FLOATING): AUDIO HUDDLE - Sits on top of everything at bottom right */}
+      <AudioHuddle roomId={safeRoomId} />
       
     </div>
   );
