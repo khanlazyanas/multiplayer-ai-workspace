@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes"; 
 import { Provider } from "./Provider";
 import { Toaster } from "react-hot-toast";
 import "@liveblocks/react-ui/styles.css";
@@ -20,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider appearance={{ baseTheme: dark } as any}>
       <html lang="en">
         <body className={inter.className}>
           <Provider>

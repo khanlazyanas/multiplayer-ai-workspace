@@ -75,13 +75,27 @@ function WorkspaceUI({
             <span className="hidden sm:block">{isCopying ? "Copied" : "Share"}</span>
           </button>
           <div className="hidden md:flex items-center"><ActiveCollaborators /></div>
+          
+          {/* 🔥 UPDATED PREMIUM USER BUTTON */}
           <div className="pl-2 sm:pl-4 border-l border-zinc-800 flex items-center shrink-0">
-            <UserButton appearance={{ elements: { avatarBox: "w-8 h-8 rounded-md border border-zinc-700 hover:border-violet-500 transition-colors" } }} />
+            <UserButton 
+              appearance={{ 
+                elements: { 
+                  avatarBox: "w-8 h-8 rounded-md border border-zinc-700 hover:border-violet-500 transition-colors",
+                  userPreviewMainIdentifier: "text-white font-semibold",
+                  userPreviewSecondaryIdentifier: "text-zinc-400",
+                  userButtonPopoverCard: "bg-[#0A0A0A] border border-zinc-800 shadow-[0_0_40px_rgba(139,92,246,0.1)]",
+                  userButtonPopoverActionButton: "hover:bg-zinc-800/50 transition-colors",
+                  userButtonPopoverActionButtonText: "text-zinc-200",
+                  userButtonPopoverActionButtonIcon: "text-zinc-400"
+                } 
+              }} 
+            />
           </div>
         </div>
       </header>
 
-      {/* EDITOR AREA: Ye solid black layer hai. Jab activeMode canvas hoga, ye transparent ho jayegi jisse Canvas dikhne lagega! */}
+      {/* EDITOR AREA */}
       <main 
         className={`flex-1 w-full bg-black relative overflow-y-auto py-10 px-4 md:px-0 flex justify-center transition-opacity duration-300 ${
           activeMode === 'document' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -119,19 +133,19 @@ export default function RoomPage() {
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden font-sans text-zinc-200">
       
-      {/* 🚀 LAYER 1 (BOTTOM): CANVAS - Completely outside Liveblocks. Never unmounts, never resizes. */}
+      {/* 🚀 LAYER 1 (BOTTOM): CANVAS */}
       <div className="absolute top-[60px] left-0 right-0 bottom-0 z-0">
         {memoizedCanvas}
       </div>
 
-      {/* 🚀 LAYER 2 (TOP): LIVEBLOCKS UI - Sits on top and hides the canvas when Editor is active. */}
+      {/* 🚀 LAYER 2 (TOP): LIVEBLOCKS UI */}
       <div className="absolute inset-0 z-10 flex flex-col pointer-events-none">
         <CollaborativeRoom roomId={safeRoomId}>
           <WorkspaceUI roomId={safeRoomId} activeMode={activeMode} setActiveMode={setActiveMode} />
         </CollaborativeRoom>
       </div>
 
-      {/* 🎙️ LAYER 3 (FLOATING): AUDIO HUDDLE - Sits on top of everything at bottom right */}
+      {/* 🎙️ LAYER 3 (FLOATING): AUDIO HUDDLE */}
       <AudioHuddle roomId={safeRoomId} />
       
     </div>
